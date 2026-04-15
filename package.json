@@ -1,7 +1,7 @@
 {
   "name": "CHARLY-MD",
   "version": "1.0.0",
-  "description": "CHARLY MD, a Multi Device Whatsapp Bot by Simbarashe Tembo for Zambia communities and SAT Limited servers",
+  "description": "CHARLY MD - Zambia's Multi-Device WhatsApp bot for SMP servers, education & groups.",
   "main": "./index.js",
   "type": "commonjs",
   "engines": {
@@ -15,20 +15,19 @@
   "keywords": [
     "CHARLY-MD",
     "whatsapp-bot",
-    "zambia-bot",
+    "zambia",
     "sat-limited",
     "minecraft-smp",
     "education-bot"
   ],
   "author": "Simbarashe Tembo.A.",
   "license": "MIT",
-  "dependencies": { ...same as Jawad... },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/CHARLY-MD.git"
+    "url": "git+https://github.com/Simbarasheat/Charly-MD-.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/CHARLY-MD/issues"
+    "url": "https://github.com/Simbarasheat/Charly-MD-/issues"
   },
-  "homepage": "https://github.com/yourusername/CHARLY-MD#readme"
+  "homepage": "https://github.com/Simbarasheat/Charly-MD-#readme"
 }
