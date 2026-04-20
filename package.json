@@ -1,33 +1,22 @@
 {
   "name": "CHARLY-MD",
   "version": "1.0.0",
-  "description": "CHARLY MD - Zambia's Multi-Device WhatsApp bot for SMP servers, education & groups.",
-  "main": "./index.js",
+  "description": "CHARLY MD - Zambia WhatsApp bot",
+  "main": "index.js",
   "type": "commonjs",
   "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
-    "start": "pm2 start index.js --deep-monitoring --attach --name CHARLY-MD",
-    "stop": "pm2 stop CHARLY-MD",
-    "restart": "pm2 restart CHARLY-MD"
+    "start": "node index.js"
   },
   "keywords": [
-    "CHARLY-MD",
-    "whatsapp-bot",
-    "zambia",
-    "sat-limited",
-    "minecraft-smp",
-    "education-bot"
+    "whatsapp-bot"
   ],
-  "author": "Simbarashe Tembo.A.",
+  "author": "Simbarashe Augustus Tembo",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Simbarasheat/Charly-MD-.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Simbarasheat/Charly-MD-/issues"
-  },
-  "homepage": "https://github.com/Simbarasheat/Charly-MD-#readme"
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.0",
+    "gtts": "^0.2.1"
+  }
 }
