@@ -1,4 +1,5 @@
 const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys")
+const fs = require("fs")
 
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState("session")
@@ -14,35 +15,39 @@ async function startBot() {
         const msg = messages[0]
         if (!msg.message) return
 
-        const text = msg.message.conversation || msg.message.extendedTextMessage?.text
         const from = msg.key.remoteJid
+        const text =
+            msg.message.conversation ||
+            msg.message.extendedTextMessage?.text
 
         if (!text) return
 
-        // PREFIX
+        // PREFIX CHECK
         if (!text.startsWith(".")) return
 
-        const command = text.split(" ")[0].slice(1).toLowerCase()
+        const args = text.split(" ")
+        const command = args[0].slice(1).toLowerCase()
 
-        // COMMANDS
+        // =============================
+        // 🤖 GENERAL COMMANDS
+        // =============================
+
         if (command === "ping") {
             await sock.sendMessage(from, { text: "🏓 Pong!" })
         }
 
         if (command === "alive") {
-            await sock.sendMessage(from, { text: "🤖 Bot is alive!" })
+            await sock.sendMessage(from, {
+                text: "✅ Charly MD Bot is running smoothly 🚀"
+            })
         }
 
-        if (command === "menu" || command === "help") {
+        if (command === "owner") {
             await sock.sendMessage(from, {
                 text: `
-🤖 Charly MD Bot
-
-🌐 Commands:
-.ping
-.alive
-.joke
-.owner
+👑 Owner Details:
+Name: Simbarashe Augustus Tembo
+Bot: Charly MD Bot
                 `
             })
         }
@@ -53,11 +58,45 @@ async function startBot() {
             })
         }
 
-        if (command === "owner") {
+        if (command === "menu" || command === "help") {
             await sock.sendMessage(from, {
-                text: "👑 Owner: SAT Limited"
+                text: `
+╔═══════════════════╗
+   🤖 Charly MD Bot  
+   Version: 1.0.0
+╚═══════════════════╝
+
+🌐 *Commands*
+➤ .ping
+➤ .alive
+➤ .joke
+➤ .owner
+                `
             })
         }
+
+        // =============================
+        // 🔊 TTS COMMAND
+        // =============================
+        if (command === "tts") {
+            const gTTS = require("gtts")
+            const textToSpeak = args.slice(1).join(" ")
+
+            if (!textToSpeak) {
+                return sock.sendMessage(from, { text: "❌ Give me text!" })
+            }
+
+            const filePath = "./tts.mp3"
+            const gtts = new gTTS(textToSpeak, "en")
+
+            gtts.save(filePath, async () => {
+                await sock.sendMessage(from, {
+                    audio: fs.readFileSync(filePath),
+                    mimetype: "audio/mp4"
+                })
+            })
+        }
+
     })
 }
 
