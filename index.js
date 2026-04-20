@@ -100,4 +100,84 @@ Bot: Charly MD Bot
     })
 }
 
+const isGroup = from.endsWith("@g.us")
+const sender = msg.key.participant || msg.key.remoteJid
+
+// Get group metadata
+let groupMetadata = isGroup ? await sock.groupMetadata(from) : null
+let participants = isGroup ? groupMetadata.participants : []
+
+// Check admin
+const isAdmin = isGroup
+    ? participants.find(p => p.id === sender)?.admin !== null
+    : false
+
+const isBotAdmin = isGroup
+    ? participants.find(p => p.id === sock.user.id)?.admin !== null
+    : false
+
+// =============================
+// 👮 ADMIN COMMANDS
+// =============================
+
+// PROMOTE
+if (command === "promote") {
+    if (!isGroup) return sock.sendMessage(from, { text: "❌ Group only!" })
+    if (!isAdmin) return sock.sendMessage(from, { text: "❌ Admin only!" })
+    if (!isBotAdmin) return sock.sendMessage(from, { text: "❌ I must be admin!" })
+
+    const mentioned = msg.message.extendedTextMessage?.contextInfo?.mentionedJid
+
+    if (!mentioned) return sock.sendMessage(from, { text: "❌ Tag user!" })
+
+    await sock.groupParticipantsUpdate(from, mentioned, "promote")
+    sock.sendMessage(from, { text: "✅ User promoted!" })
+}
+
+// DEMOTE
+if (command === "demote") {
+    if (!isGroup) return sock.sendMessage(from, { text: "❌ Group only!" })
+    if (!isAdmin) return sock.sendMessage(from, { text: "❌ Admin only!" })
+    if (!isBotAdmin) return sock.sendMessage(from, { text: "❌ I must be admin!" })
+
+    const mentioned = msg.message.extendedTextMessage?.contextInfo?.mentionedJid
+
+    if (!mentioned) return sock.sendMessage(from, { text: "❌ Tag user!" })
+
+    await sock.groupParticipantsUpdate(from, mentioned, "demote")
+    sock.sendMessage(from, { text: "⚠️ User demoted!")
+}
+
+// KICK
+if (command === "kick") {
+    if (!isGroup) return sock.sendMessage(from, { text: "❌ Group only!" })
+    if (!isAdmin) return sock.sendMessage(from, { text: "❌ Admin only!" })
+    if (!isBotAdmin) return sock.sendMessage(from, { text: "❌ I must be admin!" })
+
+    const mentioned = msg.message.extendedTextMessage?.contextInfo?.mentionedJid
+
+    if (!mentioned) return sock.sendMessage(from, { text: "❌ Tag user!" })
+
+    await sock.groupParticipantsUpdate(from, mentioned, "remove")
+    sock.sendMessage(from, { text: "🚫 User removed from group!" })
+}
+
+// BAN (SIMULATED)
+let bannedUsers = []
+
+if (command === "ban") {
+    if (!isGroup) return sock.sendMessage(from, { text: "❌ Group only!" })
+    if (!isAdmin) return sock.sendMessage(from, { text: "❌ Admin only!" })
+
+    const mentioned = msg.message.extendedTextMessage?.contextInfo?.mentionedJid
+
+    if (!mentioned) return sock.sendMessage(from, { text: "❌ Tag user!" })
+
+    bannedUsers.push(...mentioned)
+
+    await sock.groupParticipantsUpdate(from, mentioned, "remove")
+    sock.sendMessage(from, { text: "🚫 User banned!" })
+}
+
+
 startBot()
