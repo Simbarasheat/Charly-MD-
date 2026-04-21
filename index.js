@@ -4,6 +4,8 @@ const fs = require("fs")
 // IMPORT COMMAND FILES
 const general = require("./commands/general")
 const admin = require("./commands/admin")
+const games = require("./commands/games")
+const ai = require("./commands/ai")
 
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState("session")
