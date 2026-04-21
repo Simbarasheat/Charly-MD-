@@ -7,6 +7,7 @@ const admin = require("./commands/admin")
 const games = require("./commands/games")
 const ai = require("./commands/ai")
 const download = require("./commands/download")
+const sticker = require("./commands/sticker")
 
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState("session")
@@ -66,6 +67,7 @@ async function startBot() {
         await ai(context)
         await games(context)
         await download(context)
+        await sticker(context)
     })
 }
 
