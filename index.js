@@ -1,7 +1,9 @@
-const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys")
-const fs = require("fs")
+process.on("uncaughtException", console.error)
+process.on("unhandledRejection", console.error)
 
-// IMPORT COMMAND FILES
+const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys")
+
+// IMPORT COMMANDS
 const general = require("./commands/general")
 const admin = require("./commands/admin")
 const games = require("./commands/games")
@@ -47,7 +49,6 @@ async function startBot() {
             ? participants.find(p => p.id === sock.user.id)?.admin !== null
             : false
 
-        // PASS EVERYTHING TO COMMAND FILES
         const context = {
             sock,
             msg,
