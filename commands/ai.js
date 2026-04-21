@@ -1,7 +1,7 @@
 const OpenAI = require("openai")
 
 const client = new OpenAI({
-    apiKey: "YOUR_OPENAI_API_KEY"
+    apiKey: process.env.OPENAI_API_KEY
 })
 
 module.exports = async (ctx) => {
@@ -15,16 +15,16 @@ module.exports = async (ctx) => {
         }
 
         try {
-            const response = await client.chat.completions.create({
+            const res = await client.chat.completions.create({
                 model: "gpt-4o-mini",
                 messages: [{ role: "user", content: question }]
             })
 
-            const reply = response.choices[0].message.content
-
-            await sock.sendMessage(from, { text: reply })
-
-        } catch (err) {
+            await sock.sendMessage(from, {
+                text: res.choices[0].message.content
+            })
+        } catch (e) {
+            console.error(e)
             sock.sendMessage(from, { text: "❌ AI Error" })
         }
     }
