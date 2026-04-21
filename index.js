@@ -62,6 +62,8 @@ async function startBot() {
         // RUN COMMANDS
         await general(context)
         await admin(context)
+        await ai(context)
+        await games(context)
     })
 }
 
