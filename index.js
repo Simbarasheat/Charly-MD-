@@ -37,9 +37,11 @@ async function startBot() {
         }
 
         if (connection === "close") {
-            console.log("❌ Connection closed. Reconnecting...")
-            startBot()
-        }
+    console.log("❌ Connection closed. Reconnecting in 5 seconds...")
+    setTimeout(() => {
+        startBot()
+    }, 5000)
+}
     })
 
     // ✅ PAIRING CODE (for hosting / phone)
