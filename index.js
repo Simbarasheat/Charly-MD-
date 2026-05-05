@@ -10,14 +10,11 @@ const path = require("path")
 const app = express()
 const PORT = process.env.PORT || 3000
 
+app.use(express.json())
 app.use(express.static(path.join(__dirname, "public")))
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public/index.html"))
-})
-
-app.listen(PORT, () => {
-    console.log("🌐 Panel running on port", PORT)
 })
 
 // =======================
@@ -25,6 +22,7 @@ app.listen(PORT, () => {
 // =======================
 const makeWASocket = require("@whiskeysockets/baileys").default
 const { useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys")
+const QRCode = require("qrcode")
 
 // COMMANDS
 const general = require("./commands/general")
@@ -37,6 +35,7 @@ const sticker = require("./commands/sticker")
 let isStarting = false
 let retryCount = 0
 const MAX_RETRIES = 5
+let sock = null
 
 async function startBot() {
     if (isStarting) return
@@ -45,7 +44,7 @@ async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState("session")
     const { version } = await fetchLatestBaileysVersion()
 
-    const sock = makeWASocket({
+    sock = makeWASocket({
         version,
         auth: state,
         printQRInTerminal: true
@@ -86,18 +85,6 @@ async function startBot() {
             setTimeout(() => startBot(), delay)
         }
     })
-
-    // 🔐 PAIRING CODE
-    if (!sock.authState.creds.registered) {
-        const phoneNumber = "260XXXXXXXXX"
-
-        try {
-            const code = await sock.requestPairingCode(phoneNumber)
-            console.log("🔑 Pairing Code:", code)
-        } catch (err) {
-            console.log("❌ Pairing error:", err)
-        }
-    }
 
     // 💬 MESSAGE HANDLER
     sock.ev.on("messages.upsert", async ({ messages }) => {
@@ -155,4 +142,52 @@ async function startBot() {
     })
 }
 
+// =======================
+// 🔗 API ENDPOINTS
+// =======================
+
+// Get Pair Code
+app.post("/api/pair-code", async (req, res) => {
+    try {
+        const { phone } = req.body
+
+        if (!phone) {
+            return res.status(400).json({ error: "Phone number is required" })
+        }
+
+        if (!sock) {
+            return res.status(503).json({ error: "Bot is not initialized. Please try again." })
+        }
+
+        const code = await sock.requestPairingCode(phone)
+        res.json({ code })
+    } catch (error) {
+        console.error("❌ Pair code error:", error)
+        res.status(500).json({ error: error.message || "Failed to generate pair code" })
+    }
+})
+
+// Get QR Code
+app.get("/api/qr-code", async (req, res) => {
+    try {
+        if (!sock || !sock.authState) {
+            return res.status(503).json({ error: "Bot is not initialized" })
+        }
+
+        const qrValue = sock.authState.creds.me?.jid || "WAITING"
+        const qr = await QRCode.toDataURL(qrValue)
+        
+        res.json({ qr })
+    } catch (error) {
+        console.error("❌ QR code error:", error)
+        res.status(500).json({ error: error.message || "Failed to generate QR code" })
+    }
+})
+
+// Start Express Server
+app.listen(PORT, () => {
+    console.log("🌐 Panel running on port", PORT)
+})
+
+// Start Bot
 startBot()
