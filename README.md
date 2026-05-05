@@ -1,4 +1,4 @@
-### 🤖 Charly-MD
+# 🤖 Charly-MD
 
 "Charly-MD Banner" (https://files.catbox.moe/37ds7j.png)
 
