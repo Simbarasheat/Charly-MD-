@@ -1,6 +1,8 @@
 # 🤖 Charly-MD
 
-"Charly-MD Banner" (https://files.catbox.moe/37ds7j.png)
+<img src="https://files.catbox.moe/37ds7j.png">
+
+</div>
 
 Charly-MD is a fast and powerful Multi-Device WhatsApp Bot built with Baileys.
 Designed for education, automation, and advanced group management.
