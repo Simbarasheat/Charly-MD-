@@ -118,4 +118,9 @@ More features and improvements coming soon 🚀
 «💬 “Powering WhatsApp automation the smart way.”»
 
 # Copyright 
- © 2026 SAT Limited
+ © 2026 SAT Limited. All rights reserved.
+
+ <!-- Terms Of Service Button -->
+  <a href="https://satlimited.tiiny.site/tos.html" target="_blank" class="btn whatsapp">
+    💬 Terms Of Service
+  </a>
