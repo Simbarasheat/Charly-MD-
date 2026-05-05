@@ -1,4 +1,4 @@
-# 🤖 Charly-MD
+# 🤖 Charly MD
 
 <img src="https://files.catbox.moe/37ds7j.png">
 
@@ -53,7 +53,7 @@ npm start
 
 ---
 
-🚀 Deployment
+# 🚀 Deployment
 
 You can deploy this bot on:
 
@@ -61,6 +61,9 @@ You can deploy this bot on:
 - Railway
 - Replit
 - VPS
+
+[![Vercel](https://img.shields.io/badge/Vercel-Live-black?logo=vercel)](https://charly-md.vercel.app/)
+[![Render](https://img.shields.io/badge/Render-Backend-blue?logo=render)](https://charly-md-bdh8.onrender.com/)
 
 ---
 
