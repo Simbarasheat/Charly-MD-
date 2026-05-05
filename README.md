@@ -1,5 +1,11 @@
 # 🤖 Charly MD
 
+<div align="center"> 
+  <a href="https://git.io/typing-svg"> 
+    <img src="https://readme-typing-svg.demolab.com?font=Ribeye&size=50&pause=1000&color=33ff00&center=true&width=910&height=100&lines=Charly-MD;Multi+Device+Whatsapp+Bot;Coded+By+Simbarashe+Tembo+.A." alt="Typing SVG" />
+  </a> 
+</div> 
+
 <img src="https://files.catbox.moe/37ds7j.png">
 
 </div>
@@ -67,14 +73,14 @@ You can deploy this bot on:
 
 ---
 
-⚠️ Disclaimer
+# ⚠️ Disclaimer
 
 This bot is made for educational purposes only.
 Misuse may lead to WhatsApp account restrictions.
 
 ---
 
-⭐ Support & Contribution
+# ⭐ Support & Contribution
 
 If you like this project:
 
@@ -84,14 +90,17 @@ If you like this project:
 
 ---
 
-📌 Credits
+### 📌 Credits
 
 - Baileys (WhatsApp Web API)
 - Open-source contributors
 
 ---
 
-📢 Note
+
+
+
+## 📢 Note
 
 This project is still under development.
 More features and improvements coming soon 🚀
