@@ -1,10 +1,32 @@
 process.on("uncaughtException", console.error)
 process.on("unhandledRejection", console.error)
 
+// =======================
+// 🌐 EXPRESS (WEB PANEL)
+// =======================
+const express = require("express")
+const path = require("path")
+
+const app = express()
+const PORT = process.env.PORT || 3000
+
+app.use(express.static(path.join(__dirname, "public")))
+
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public/index.html"))
+})
+
+app.listen(PORT, () => {
+    console.log("🌐 Panel running on port", PORT)
+})
+
+// =======================
+// 🤖 WHATSAPP BOT
+// =======================
 const makeWASocket = require("@whiskeysockets/baileys").default
 const { useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys")
 
-// IMPORT COMMANDS
+// COMMANDS
 const general = require("./commands/general")
 const admin = require("./commands/admin")
 const games = require("./commands/games")
@@ -25,53 +47,59 @@ async function startBot() {
 
     const sock = makeWASocket({
         version,
-        auth: state
+        auth: state,
+        printQRInTerminal: true
     })
 
     sock.ev.on("creds.update", saveCreds)
 
-    // ✅ CONNECTION HANDLER
+    // 🔌 CONNECTION HANDLER
     sock.ev.on("connection.update", async (update) => {
-        const { connection, qr } = update
-
-        if (qr) {
-            console.log("📱 Scan this QR code:")
-            console.log(qr)
-        }
+        const { connection, lastDisconnect } = update
 
         if (connection === "open") {
             console.log("✅ Bot connected to WhatsApp!")
-            retryCount = 0 // reset retries
+            retryCount = 0
         }
 
         if (connection === "close") {
             isStarting = false
 
+            const shouldReconnect =
+                lastDisconnect?.error?.output?.statusCode !== 401
+
+            if (!shouldReconnect) {
+                console.log("🚫 Logged out. Delete session and restart.")
+                return
+            }
+
             if (retryCount >= MAX_RETRIES) {
-                console.log("🚫 Max retries reached. Stopping bot to avoid suspension.")
+                console.log("🚫 Max retries reached. Stopping to avoid ban.")
                 return
             }
 
             retryCount++
-            const delay = 5000 * retryCount // increasing delay
+            const delay = 10000 * retryCount
 
-            console.log(`❌ Connection closed. Retry ${retryCount}/${MAX_RETRIES} in ${delay / 1000}s...`)
+            console.log(`🔄 Reconnecting in ${delay / 1000}s...`)
 
-            setTimeout(() => {
-                startBot()
-            }, delay)
+            setTimeout(() => startBot(), delay)
         }
     })
 
-    // ✅ PAIRING CODE
+    // 🔐 PAIRING CODE
     if (!sock.authState.creds.registered) {
-        const phoneNumber = "260XXXXXXXXX" // 🔴 PUT YOUR REAL NUMBER
+        const phoneNumber = "260XXXXXXXXX"
 
-        const code = await sock.requestPairingCode(phoneNumber)
-        console.log(`🔑 Pairing Code: ${code}`)
+        try {
+            const code = await sock.requestPairingCode(phoneNumber)
+            console.log("🔑 Pairing Code:", code)
+        } catch (err) {
+            console.log("❌ Pairing error:", err)
+        }
     }
 
-    // ✅ MESSAGE HANDLER
+    // 💬 MESSAGE HANDLER
     sock.ev.on("messages.upsert", async ({ messages }) => {
         try {
             const msg = messages[0]
