@@ -1,4 +1,4 @@
-🤖 Charly-MD
+### 🤖 Charly-MD
 
 "Charly-MD Banner" (https://files.catbox.moe/37ds7j.png)
 
@@ -7,9 +7,10 @@ Designed for education, automation, and advanced group management.
 
 ---
 
-👑 Owner
+## 👑 Owner
 
 Simbarashe Tembo .A
+
 Powered by SAT Limited
 
 ---
