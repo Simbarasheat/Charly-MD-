@@ -1,66 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Charly MD</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0fafa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 300px;
-        }
-        h1 {
-            color: #008080;
-        }
-        label {
-            display: block;
-            margin: 20px 0 10px;
-            font-weight: bold;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            border: none;
-            background-color: #008080;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #005757;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Charly MD V2 - WhatsApp Bot Pairing</title>
+  <style>
+    * {margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, sans-serif;}
+    body {
+      background: #e6fffa;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+   .card {
+      background: white;
+      border-radius: 24px;
+      padding: 24px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border-top: 4px solid #14b8a6;
+    }
+   .header {display: flex; align-items: center; gap: 12px; margin-bottom: 4px;}
+   .avatar {width: 48px; height: 48px; border-radius: 50%;}
+   .sub {font-size: 10px; color: #14b8a6; letter-spacing: 1px; font-weight: 600;}
+   .title {font-size: 20px; font-weight: 700; color: #1f2937;}
+   .title span {color: #14b8a6;}
+   .subtitle {color: #6b7280; font-size: 14px; margin: 4px 0 20px 0;}
+   .tabs {
+      display: flex;
+      background: #f3f4f6;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+   .tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #6b7280;
+      cursor: pointer;
+    }
+   .tab.active {background: white; color: #1f2937; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
+   .input-group {position: relative; margin-bottom: 8px;}
+   .input-group input {
+      width: 100%;
+      padding: 14px 14px 14px 44px;
+      border: 1px solid #e5e7eb;
+      background: #f0fdfa;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+    }
+   .input-group input:focus {border-color: #14b8a6;}
+   .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+   .warning {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #f59e0b;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+   .btn {
+      width: 100%;
+      padding: 14px;
+      background: #14b8a6;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 24px;
+    }
+   .btn:hover {background: #0d9488;}
+   .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #9ca3af;
+      line-height: 1.6;
+    }
+   .footer .teal {color: #14b8a6; font-weight: 500;}
+   .footer .pink {color: #ec4899; font-weight: 500;}
+   #qr-panel {display: none; text-align: center; padding: 40px 0; color: #6b7280;}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Charly MD</h1>
-        <p>Powered by SAT Limited</p>
-        <p>Made by Simbarashe Tembo A.</p>
-        <form action="/pair" method="POST">
-            <label for="phone">Enter Phone Number (with country code):</label>
-            <input type="text" id="phone" name="phone" placeholder="9471234567" required>
-            <button type="submit">Get Pair Code</button>
-        </form>
+  <div class="card">
+    <div class="header">
+      <img src="https://files.catbox.moe/37ds7j.png" alt="Avatar" class="avatar">
+      <div>
+        <div class="sub">SAT Limited</div>
+        <h1 class="title">Charly MD <span>V2</span></h1>
+      </div>
     </div>
-</body>
-</html>
+    
+    <p class="subtitle">WhatsApp Bot Pairing Panel</p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('phone')">📱 Phone Code</button>
+      <button class="tab" onclick="switchTab('qr')">📷 Scan QR</button>
+    </div>
+
+    <div id="phone-panel">
+      <div class="input-group">
+        <span class="input-icon">📱</span>
+        <input type="text" id="phone" placeholder="94712345678 (country code + number)">
+      </div>
+      
+      <div class="warning">
+        ⚠️ Enter full number with country code. No + or spaces.
+      </div>
+
+      <button class="btn" onclick="getPairCode()">🔗 Get Pair Code</button>
+    </div>
+
+    <div id="qr-panel">
+      QR Code will appear here
+    </div>
+
+    <div class="footer">
+      Powered by <span class="teal">SAT Limited</span> · Owner: <span class="pink">Simbarashe Tembo .A.</span>
+      </div> <!-- footer -->
