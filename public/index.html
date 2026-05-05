@@ -86,6 +86,7 @@
       margin-bottom: 24px;
     }
    .btn:hover {background: #0d9488;}
+   .btn:disabled {background: #9ca3af; cursor: not-allowed;}
    .footer {
       text-align: center;
       font-size: 11px;
@@ -95,6 +96,15 @@
    .footer .teal {color: #14b8a6; font-weight: 500;}
    .footer .pink {color: #ec4899; font-weight: 500;}
    #qr-panel {display: none; text-align: center; padding: 40px 0; color: #6b7280;}
+   .qr-code-display {display: none; margin: 20px 0;}
+   .qr-code-display img {max-width: 200px;}
+   .pair-code-display {display: none; background: #f0fdfa; padding: 16px; border-radius: 12px; margin: 16px 0;}
+   .pair-code-display .code {font-size: 24px; font-weight: 700; color: #14b8a6; font-family: monospace; letter-spacing: 2px;}
+   .success {color: #10b981; font-size: 14px; margin-top: 10px;}
+   .error {color: #ef4444; font-size: 14px; margin-top: 10px;}
+   .loading {display: none; text-align: center; margin: 16px 0;}
+   .spinner {display: inline-block; width: 20px; height: 20px; border: 3px solid #e5e7eb; border-top: 3px solid #14b8a6; border-radius: 50%; animation: spin 1s linear infinite;}
+   @keyframes spin {0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);}}
   </style>
 </head>
 <body>
@@ -124,13 +134,116 @@
         ⚠️ Enter full number with country code. No + or spaces.
       </div>
 
-      <button class="btn" onclick="getPairCode()">🔗 Get Pair Code</button>
+      <button class="btn" onclick="getPairCode()" id="pairBtn">🔗 Get Pair Code</button>
+      
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Requesting pair code...</p>
+      </div>
+
+      <div class="pair-code-display" id="pairCodeDisplay">
+        <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">Your Pair Code:</p>
+        <div class="code" id="pairCodeValue"></div>
+        <p class="success">✅ Pair code received! Enter it on your phone.</p>
+      </div>
+
+      <div class="error" id="errorMsg"></div>
     </div>
 
     <div id="qr-panel">
-      QR Code will appear here
+      <div class="loading" id="qrLoading">
+        <div class="spinner"></div>
+        <p>Loading QR Code...</p>
+      </div>
+      <div class="qr-code-display" id="qrCodeDisplay">
+        <img id="qrImage" alt="QR Code">
+      </div>
     </div>
 
     <div class="footer">
       Powered by <span class="teal">SAT Limited</span> · Owner: <span class="pink">Simbarashe Tembo .A.</span>
-      </div> <!-- footer -->
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('[id$="-panel"]').forEach(p => p.style.display = 'none');
+      
+      event.target.classList.add('active');
+      document.getElementById(tab + '-panel').style.display = 'block';
+      
+      if (tab === 'qr') {
+        getQRCode();
+      }
+    }
+
+    async function getPairCode() {
+      const phone = document.getElementById('phone').value.trim();
+      const errorMsg = document.getElementById('errorMsg');
+      const loading = document.getElementById('loading');
+      const pairCodeDisplay = document.getElementById('pairCodeDisplay');
+      const pairBtn = document.getElementById('pairBtn');
+
+      errorMsg.style.display = 'none';
+      errorMsg.textContent = '';
+      pairCodeDisplay.style.display = 'none';
+
+      if (!phone) {
+        errorMsg.textContent = '❌ Please enter a phone number';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      loading.style.display = 'block';
+      pairBtn.disabled = true;
+
+      try {
+        const response = await fetch('/api/pair-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to get pair code');
+        }
+
+        document.getElementById('pairCodeValue').textContent = data.code;
+        pairCodeDisplay.style.display = 'block';
+      } catch (error) {
+        errorMsg.textContent = `❌ ${error.message}`;
+        errorMsg.style.display = 'block';
+      } finally {
+        loading.style.display = 'none';
+        pairBtn.disabled = false;
+      }
+    }
+
+    async function getQRCode() {
+      const qrLoading = document.getElementById('qrLoading');
+      const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+      const qrImage = document.getElementById('qrImage');
+
+      try {
+        const response = await fetch('/api/qr-code');
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to get QR code');
+        }
+
+        qrImage.src = data.qr;
+        qrCodeDisplay.style.display = 'block';
+      } catch (error) {
+        qrCodeDisplay.innerHTML = `<p class="error">❌ ${error.message}</p>`;
+        qrCodeDisplay.style.display = 'block';
+      } finally {
+        qrLoading.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
