@@ -23,7 +23,7 @@ Powered by SAT Limited
 
 ---
 
-✨ Features
+## ✨ Features
 
 - 📚 Educational commands
 - 👥 Group management (kick, promote, warnings, etc.)
@@ -34,7 +34,7 @@ Powered by SAT Limited
 
 ---
 
-🧠 Tech Stack
+## 🧠 Tech Stack
 
 - Node.js
 - Baileys
@@ -42,7 +42,7 @@ Powered by SAT Limited
 
 ---
 
-📦 Installation
+## 📦 Installation
 
 git clone https://github.com/Simbarasheat/Charly-MD-
 cd Charly-MD-
@@ -51,7 +51,15 @@ npm start
 
 ---
 
-🔑 Setup
+# Join Us 
+
+<a href="https://chat.whatsapp.com/BptK11rIgxRIoJCF9MGnLF">
+    <img src="https://img.shields.io/badge/Join%20WhatsApp%20Group-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="Join WhatsApp"/>
+  </a>
+</div>
+
+
+## 🔑 Setup
 
 1. Scan pairing code or QR
 2. Wait for bot to connect
@@ -80,7 +88,7 @@ Misuse may lead to WhatsApp account restrictions.
 
 ---
 
-# ⭐ Support & Contribution
+## ⭐ Support & Contribution
 
 If you like this project:
 
@@ -108,3 +116,6 @@ More features and improvements coming soon 🚀
 ---
 
 «💬 “Powering WhatsApp automation the smart way.”»
+
+# Copyright 
+ © 2026 SAT Limited
