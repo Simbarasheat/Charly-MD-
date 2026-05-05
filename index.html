@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charly MD</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0fafa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 300px;
+        }
+        h1 {
+            color: #008080;
+        }
+        label {
+            display: block;
+            margin: 20px 0 10px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #008080;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #005757;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Charly MD</h1>
+        <p>Powered by SAT Limited</p>
+        <p>Made by Simbarashe Tembo A.</p>
+        <form action="/pair" method="POST">
+            <label for="phone">Enter Phone Number (with country code):</label>
+            <input type="text" id="phone" name="phone" placeholder="9471234567" required>
+            <button type="submit">Get Pair Code</button>
+        </form>
+    </div>
+</body>
+</html>
