@@ -17,16 +17,42 @@ module.exports = async (ctx) => {
     }
 
     if (command === "menu") {
-        await sock.sendMessage(from, {
-            text: `
-🤖 Charly MD Bot
+    await sock.sendMessage(from, {
+        image: { url: BOT_IMAGE },
+        caption: `
+🤖 *CHARLY MD BOT MENU*
+ 
+ Owner: SAT Limited Dev
+ Prefix: (.)
 
-.ping
-.alive
-.joke
-            `
-        })
-    }
+⚡ MAIN COMMANDS
+.ping - Check bot speed
+.alive - Check if bot is running
+.menu - Show this menu
+.pair 
+.gpt - AI
+etc
+
+🎉 FUN COMMANDS
+.joke - Random joke
+
+🔊 MEDIA
+.tts <text> - Text to speech
+.play
+
+🫂 GROUP COMMANDS
+.kick
+.promote
+.antilink on/off
+.warn
+
+🔥 NOTE
+ 1. More Commands Coming Soon.
+
+👑 Powered by SAT Limited
+        `
+    })
+}
 
     if (command === "joke") {
         await sock.sendMessage(from, {
