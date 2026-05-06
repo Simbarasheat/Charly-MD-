@@ -62,8 +62,7 @@ module.exports = async (ctx) => {
 .update - Bot update status
 
 📢 OFFICIAL CHANNEL
-🔗 SAT Bot Network
-https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e
+🔗https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e
 
 📌 INFO
 Bot created by SAT Limited
