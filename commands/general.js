@@ -32,8 +32,13 @@ const isOwner = (sender) => sender === ownerNumber
 }
 
     if (command === "ping") {
-        await sock.sendMessage(from, { text: "🏓 Pong!" })
-    }
+    const end = Date.now()
+    const ping = end - start
+
+    await sock.sendMessage(from, {
+        text: `🏓 Pong!\n⚡ Speed: ${ping}ms`
+    })
+}
 
     if (command === "alive") {
         await sock.sendMessage(from, {
