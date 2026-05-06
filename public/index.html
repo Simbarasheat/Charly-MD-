@@ -1,249 +1,148 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Charly MD V2 - WhatsApp Bot Pairing</title>
-  <style>
-    * {margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, sans-serif;}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Charly MD V2 - Pairing Panel</title>  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
     body {
-      background: #e6fffa;
-      min-height: 100vh;
+      background: linear-gradient(135deg, #dff5f2, #c8ebe6);
       display: flex;
+      align-items: center;
       justify-content: center;
-      align-items: center;
-      padding: 20px;
+      height: 100vh;
     }
-   .card {
-      background: white;
-      border-radius: 24px;
-      padding: 24px;
-      width: 100%;
-      max-width: 360px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      border-top: 4px solid #14b8a6;
+
+    .card {
+      background: #fff;
+      padding: 25px;
+      border-radius: 20px;
+      width: 95%;
+      max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      text-align: center;
     }
-   .header {display: flex; align-items: center; gap: 12px; margin-bottom: 4px;}
-   .avatar {width: 48px; height: 48px; border-radius: 50%;}
-   .sub {font-size: 10px; color: #14b8a6; letter-spacing: 1px; font-weight: 600;}
-   .title {font-size: 20px; font-weight: 700; color: #1f2937;}
-   .title span {color: #14b8a6;}
-   .subtitle {color: #6b7280; font-size: 14px; margin: 4px 0 20px 0;}
-   .tabs {
-      display: flex;
-      background: #f3f4f6;
-      border-radius: 12px;
-      padding: 4px;
-      margin-bottom: 16px;
+
+    .title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 5px;
     }
-   .tab {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      background: transparent;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #6b7280;
-      cursor: pointer;
-    }
-   .tab.active {background: white; color: #1f2937; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
-   .input-group {position: relative; margin-bottom: 8px;}
-   .input-group input {
-      width: 100%;
-      padding: 14px 14px 14px 44px;
-      border: 1px solid #e5e7eb;
-      background: #f0fdfa;
-      border-radius: 12px;
-      font-size: 15px;
-      outline: none;
-    }
-   .input-group input:focus {border-color: #14b8a6;}
-   .input-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-   .warning {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #f59e0b;
-      font-size: 12px;
+
+    .subtitle {
+      color: #666;
       margin-bottom: 20px;
     }
-   .btn {
+
+    input {
       width: 100%;
       padding: 14px;
-      background: #14b8a6;
-      color: white;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
       border: none;
       border-radius: 12px;
+      background: #1abc9c;
+      color: white;
       font-size: 16px;
-      font-weight: 600;
       cursor: pointer;
-      margin-bottom: 24px;
-    }
-   .btn:hover {background: #0d9488;}
-   .btn:disabled {background: #9ca3af; cursor: not-allowed;}
-   .footer {
-      text-align: center;
-      font-size: 11px;
-      color: #9ca3af;
-      line-height: 1.6;
-    }
-   .footer .teal {color: #14b8a6; font-weight: 500;}
-   .footer .pink {color: #ec4899; font-weight: 500;}
-   #qr-panel {display: none; text-align: center; padding: 40px 0; color: #6b7280;}
-   .qr-code-display {display: none; margin: 20px 0;}
-   .qr-code-display img {max-width: 200px;}
-   .pair-code-display {display: none; background: #f0fdfa; padding: 16px; border-radius: 12px; margin: 16px 0;}
-   .pair-code-display .code {font-size: 24px; font-weight: 700; color: #14b8a6; font-family: monospace; letter-spacing: 2px;}
-   .success {color: #10b981; font-size: 14px; margin-top: 10px;}
-   .error {color: #ef4444; font-size: 14px; margin-top: 10px;}
-   .loading {display: none; text-align: center; margin: 16px 0;}
-   .spinner {display: inline-block; width: 20px; height: 20px; border: 3px solid #e5e7eb; border-top: 3px solid #14b8a6; border-radius: 50%; animation: spin 1s linear infinite;}
-   @keyframes spin {0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);}}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="header">
-      <img src="https://files.catbox.moe/37ds7j.png" alt="Avatar" class="avatar">
-      <div>
-        <div class="sub">SAT Limited</div>
-        <h1 class="title">Charly MD <span>V2</span></h1>
-      </div>
-    </div>
-    
-    <p class="subtitle">WhatsApp Bot Pairing Panel</p>
-
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('phone')">📱 Phone Code</button>
-      <button class="tab" onclick="switchTab('qr')">📷 Scan QR</button>
-    </div>
-
-    <div id="phone-panel">
-      <div class="input-group">
-        <span class="input-icon">📱</span>
-        <input type="text" id="phone" placeholder="94712345678 (country code + number)">
-      </div>
-      
-      <div class="warning">
-        ⚠️ Enter full number with country code. No + or spaces.
-      </div>
-
-      <button class="btn" onclick="getPairCode()" id="pairBtn">🔗 Get Pair Code</button>
-      
-      <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <p>Requesting pair code...</p>
-      </div>
-
-      <div class="pair-code-display" id="pairCodeDisplay">
-        <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">Your Pair Code:</p>
-        <div class="code" id="pairCodeValue"></div>
-        <p class="success">✅ Pair code received! Enter it on your phone.</p>
-      </div>
-
-      <div class="error" id="errorMsg"></div>
-    </div>
-
-    <div id="qr-panel">
-      <div class="loading" id="qrLoading">
-        <div class="spinner"></div>
-        <p>Loading QR Code...</p>
-      </div>
-      <div class="qr-code-display" id="qrCodeDisplay">
-        <img id="qrImage" alt="QR Code">
-      </div>
-    </div>
-
-    <div class="footer">
-      Powered by <span class="teal">SAT Limited</span> · Owner: <span class="pink">Simbarashe Tembo .A.</span>
-    </div>
-  </div>
-
-  <script>
-    function switchTab(tab) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('[id$="-panel"]').forEach(p => p.style.display = 'none');
-      
-      event.target.classList.add('active');
-      document.getElementById(tab + '-panel').style.display = 'block';
-      
-      if (tab === 'qr') {
-        getQRCode();
-      }
+      transition: 0.2s;
     }
 
-    async function getPairCode() {
-      const phone = document.getElementById('phone').value.trim();
-      const errorMsg = document.getElementById('errorMsg');
-      const loading = document.getElementById('loading');
-      const pairCodeDisplay = document.getElementById('pairCodeDisplay');
-      const pairBtn = document.getElementById('pairBtn');
+    button:hover {
+      background: #16a085;
+    }
 
-      errorMsg.style.display = 'none';
-      errorMsg.textContent = '';
-      pairCodeDisplay.style.display = 'none';
+    .warning {
+      font-size: 12px;
+      color: #e67e22;
+      margin-bottom: 15px;
+    }
+
+    .result {
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style></head>
+<body>  <div class="card">
+    <div class="title">Charly MD V2</div>
+    <div class="subtitle">WhatsApp Bot Pairing Panel</div><input type="text" id="phone" placeholder="260XXXXXXXXX" />
+
+<div class="warning">
+  ⚠ Enter full number with country code. No + or spaces.
+</div>
+
+<button onclick="getCode()">Get Pair Code</button>
+
+<div class="result" id="result"></div>
+<div class="error" id="error"></div>
+
+<div class="footer">
+  Powered by SAT Limited
+</div>
+
+  </div>  <script>
+    async function getCode() {
+      const phone = document.getElementById("phone").value.trim();
+      const result = document.getElementById("result");
+      const error = document.getElementById("error");
+
+      result.innerText = "";
+      error.innerText = "";
 
       if (!phone) {
-        errorMsg.textContent = '❌ Please enter a phone number';
-        errorMsg.style.display = 'block';
+        error.innerText = "Enter a phone number.";
         return;
       }
 
-      loading.style.display = 'block';
-      pairBtn.disabled = true;
-
       try {
-        const response = await fetch('/api/pair-code', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/pair-code", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({ phone })
         });
 
-        const data = await response.json();
+        const data = await res.json();
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to get pair code');
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to get code");
         }
 
-        document.getElementById('pairCodeValue').textContent = data.code;
-        pairCodeDisplay.style.display = 'block';
-      } catch (error) {
-        errorMsg.textContent = `❌ ${error.message}`;
-        errorMsg.style.display = 'block';
-      } finally {
-        loading.style.display = 'none';
-        pairBtn.disabled = false;
-      }
-    }
+        result.innerText = "Your Code: " + data.code;
+      } catch (err) {
+        console.error(err);
 
-    async function getQRCode() {
-      const qrLoading = document.getElementById('qrLoading');
-      const qrCodeDisplay = document.getElementById('qrCodeDisplay');
-      const qrImage = document.getElementById('qrImage');
-
-      try {
-        const response = await fetch('/api/qr-code');
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to get QR code');
+        if (err.message.includes("Unexpected token")) {
+          error.innerText = "Server returned HTML instead of JSON. Check backend route.";
+        } else {
+          error.innerText = err.message;
         }
-
-        qrImage.src = data.qr;
-        qrCodeDisplay.style.display = 'block';
-      } catch (error) {
-        qrCodeDisplay.innerHTML = `<p class="error">❌ ${error.message}</p>`;
-        qrCodeDisplay.style.display = 'block';
-      } finally {
-        qrLoading.style.display = 'none';
       }
     }
-  </script>
-</body>
+  </script></body>
 </html>
