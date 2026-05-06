@@ -60,6 +60,20 @@ etc
         })
     }
 
+    if (command === "owner") {
+
+    const message = `
+╭━━━〔 👑 OWNER INFO 〕━━━╮
+┃ 🤖 Bot: Charly MD
+┃ 👤 Owner: Simbarashe Tembo
+┃ 📞 +260772697513
+┃ ⚡ SAT Limited
+╰━━━━━━━━━━━━━━━━━━╯
+    `.trim()
+
+    return await sock.sendMessage(from, { text: message })
+}
+
     // TTS
     if (command === "tts") {
         const gTTS = require("gtts")
