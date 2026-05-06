@@ -18,7 +18,7 @@ Designed for education, automation, and advanced group management.
 ## 👑 Owner
 
 1. Simbarashe Tembo .A
-2.
+2. LumenX
 
 > Powered by SAT Limited
 
