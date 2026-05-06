@@ -3,7 +3,19 @@ const fs = require("fs")
 // 📸 Bot image (you can replace this link anytime)
 const BOT_IMAGE = "https://files.catbox.moe/37ds7j.png"
 
+const startTime = Date.now()
+
 const BOT_VERSION = "2.0.0"
+
+const getUptime = () => {
+    const seconds = Math.floor((Date.now() - startTime) / 1000)
+
+    const h = Math.floor(seconds / 3600)
+    const m = Math.floor((seconds % 3600) / 60)
+    const s = seconds % 60
+
+    return `${h}h ${m}m ${s}s`
+}
 
 let mode = "public"
 
