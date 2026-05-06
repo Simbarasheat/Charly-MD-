@@ -74,6 +74,31 @@ etc
     return await sock.sendMessage(from, { text: message })
 }
 
+    if (command === "update") {
+
+    // 🔐 ONLY ALLOWED OWNER NUMBER
+    const allowedNumber = "260772697513@s.whatsapp.net"
+
+    if (sender !== allowedNumber) {
+        return await sock.sendMessage(from, {
+            text: "❌ You are not allowed to use this command."
+        })
+    }
+
+    // Example update action (edit this part later)
+    const message = `
+🔄 *BOT UPDATE MODE*
+
+👨‍💻 Developer: SAT Limited
+📦 Status: Updating bot components...
+⚙️ Changes: System patches applied
+
+✅ Bot updated successfully.
+    `.trim()
+
+    return await sock.sendMessage(from, { text: message })
+}
+
     // TTS
     if (command === "tts") {
         const gTTS = require("gtts")
