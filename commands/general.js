@@ -73,53 +73,71 @@ const isOwner = (sender) => sender === ownerNumber
 ┃ 🧩 Version: ${BOT_VERSION}
 ╰━━━━━━━━━━━━━━━━━━━━━━╯
 
-⚡ MAIN COMMANDS
-.ping - Check bot speed
-.alive - Check bot status
-.menu - Show full menu
-.gpt - AI chatbot 🤖
-.pair - Link WhatsApp bot
+┌──⭓『 ⚡ MAIN COMMANDS 』
+│ .ping - Check bot speed
+│ .alive - Check bot status
+│ .menu - Show full menu
+│ .gpt - AI chatbot 🤖
+│ .pair - Link WhatsApp bot
+└───────⭓
 
-🧠 AI SYSTEM
-.gpt <text> - Ask AI anything
+┌──⭓『 🧠 AI SYSTEM 』
+│ .gpt <text> - Ask AI anything
+└───────⭓
 
-🎮 GAMES
-.guess - Number guessing game
-.trivia - Trivia questions
-.answer - Answer trivia
+┌──⭓『 🎮 GAMES 』
+│ .guess - Number guessing game
+│ .trivia - Trivia questions
+│ .answer - Answer trivia
+└───────⭓
 
-🔊 MEDIA
-.play <name> - Play music 🎵
-.ytmp4 <link> - Download video 🎥
-.tts <text> - Text to speech 🔊
+┌──⭓『 🔊 MEDIA 』
+│ .play <name> - Play music 🎵
+│ .ytmp4 <link> - Download video 🎥
+│ .tts <text> - Text to speech 🔊
+└───────⭓
 
-🖼️ STICKERS & FUN
-.sticker - Convert image to sticker
-.meme - Random meme 😂
-.joke - Random joke
+┌──⭓『 🖼️ STICKERS & FUN 』
+│ .sticker - Convert image to sticker
+│ .meme - Random meme 😂
+│ .joke - Random joke
+└───────⭓
 
-👮 GROUP COMMANDS
-.kick - Remove user
-.promote - Promote user
-.warn - Warn user
-.antilink on/off - Block links 🔗
+┌──⭓『 👮 GROUP COMMANDS 』
+│ .kick - Remove user
+│ .promote - Promote user
+│ .warn - Warn user
+│ .antilink on/off - Block links 🔗
+└───────⭓
 
-🔐 OWNER COMMANDS
-.owner - Bot owner info 👑
-.update - Bot update status
-.mode public/private/self
+┌──⭓『 🔐 OWNER COMMANDS 』
+│ .owner - Bot owner info 👑
+│ .update - Bot update status
+│ .mode public/private/self
+└───────⭓
 
 📢 OFFICIAL CHANNEL
-🔗https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e
+│ Join for updates & support
 
 📌 INFO
-Bot created by SAT Limited
-More updates coming soon 🚀
-
+│ Bot created by SAT Limited
+│ More updates coming soon 🚀
 ╰━━━━━━━━━━━━━━━━━━━━━━╯
-        `
+        `,
+        contextInfo: {
+            externalAdReply: {
+                title: "Charly MD Official Channel",
+                body: "Powered by SAT Limited",
+                thumbnailUrl: BOT_IMAGE,
+                sourceUrl: "https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e",
+                mediaType: 1,
+                renderLargerThumbnail: true
+            }
+        }
     })
-}
+}  
+
+
 
     if (command === "joke") {
     const { sock, from } = ctx
