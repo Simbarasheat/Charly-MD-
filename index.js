@@ -67,10 +67,36 @@ sock.ev.on("connection.update", async (update) => {
     }
 
     if (connection === "open") {
-        console.log("✅ Bot connected to WhatsApp!")
-        latestQR = null
-        retryCount = 0
-    }
+    console.log("✅ Bot connected to WhatsApp!")
+    latestQR = null
+    retryCount = 0
+
+    const BOT_VERSION = "2.0.0"
+    const BOT_IMAGE = "https://files.catbox.moe/37ds7j.png"
+    const deployer = sock.user.id.split(":")[0] // auto-gets bot number
+    
+    await sock.sendMessage(deployer + "@s.whatsapp.net", { 
+        image: { url: BOT_IMAGE },
+        caption: `
+🤖 *CHARLY MD ACTIVATED*
+
+Type.menu for commands
+
+⚡ Version: ${BOT_VERSION}
+👑 Powered by SAT Limited
+        `,
+        contextInfo: {
+            externalAdReply: {
+                title: "Charly MD Official Channel",
+                body: "Tap to join • SAT Limited",
+                thumbnailUrl: BOT_IMAGE,
+                sourceUrl: "https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e",
+                mediaType: 1,
+                renderLargerThumbnail: true
+            }
+        }
+    }).catch(e => console.log("Startup msg failed:", e))
+}
 
     if (connection === "close") {
         isStarting = false
