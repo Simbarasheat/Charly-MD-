@@ -44,11 +44,11 @@ Designed for education, automation, and advanced group management.
 ---
 
 ## 📦 Installation
-
-~~~git clone https://github.com/Simbarasheat/Charly-MD-
-cd Charly-MD-
+```bash
+git clone https://github.com/Simbarasheat/Charly-MD
+cd Charly-MD
 npm install
-npm start~~~
+npm start
 
 ---
 
