@@ -5,9 +5,13 @@ const BOT_IMAGE = "https://files.catbox.moe/37ds7j.png"
 
 let mode = "public"
 
-if (fs.existsSync("./database/mode.json")) {
-    mode = JSON.parse(fs.readFileSync("./database/mode.json")).mode
+const loadMode = () => {
+    if (fs.existsSync("./database/mode.json")) {
+        mode = JSON.parse(fs.readFileSync("./database/mode.json")).mode
+    }
 }
+
+loadMode()
 
 module.exports = async (ctx) => {
     const { sock, from, command, args, sender } = ctx
@@ -161,7 +165,7 @@ More updates coming soon 🚀
 
     if (!newMode) {
         return sock.sendMessage(from, {
-            text: `📌 Current mode: ${mode}\n\nUse:\n.mode public\n.mode private\n.mode self`
+            text: `📌 Current mode: *${mode}*\n\nUse:\n.mode public\n.mode private\n.mode self`
         })
     }
 
