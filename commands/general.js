@@ -16,8 +16,8 @@ const ownerNumber = "260772697513@s.whatsapp.net" // your number
 
 const isOwner = (sender) => sender === ownerNumber
 
-// MODE SYSTEM
-if (mode === "private" && !isOwner(sender)) {
+    // MODE SYSTEM
+    if (mode === "private" && !isOwner(sender)) {
     return sock.sendMessage(from, { text: "⛔ Bot is in PRIVATE mode" })
 }
 
