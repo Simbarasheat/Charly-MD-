@@ -49,6 +49,7 @@ git clone https://github.com/Simbarasheat/Charly-MD
 cd Charly-MD
 npm install
 npm start
+```
 
 ---
 
