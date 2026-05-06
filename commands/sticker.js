@@ -1,12 +1,7 @@
-const fs = require("fs")
-
 module.exports = async (ctx) => {
     const { sock, from, msg, command } = ctx
 
     // 📌 STICKER FROM IMAGE
-    module.exports = async (ctx) => {
-    const { sock, from, msg, command } = ctx
-
     if (command === "sticker") {
 
         const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage
@@ -53,4 +48,5 @@ module.exports = async (ctx) => {
             caption: "😂 *Random Meme*"
         })
     }
+
 }
