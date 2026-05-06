@@ -17,9 +17,10 @@ Designed for education, automation, and advanced group management.
 
 ## 👑 Owner
 
-Simbarashe Tembo .A
+1. Simbarashe Tembo .A
+2.
 
-Powered by SAT Limited
+> Powered by SAT Limited
 
 ---
 
@@ -44,10 +45,10 @@ Powered by SAT Limited
 
 ## 📦 Installation
 
-git clone https://github.com/Simbarasheat/Charly-MD-
+~~~git clone https://github.com/Simbarasheat/Charly-MD-
 cd Charly-MD-
 npm install
-npm start
+npm start~~~
 
 ---
 
@@ -122,5 +123,5 @@ More features and improvements coming soon 🚀
 
  <!-- Terms Of Service Button -->
   <a href="https://satlimited.tiiny.site/tos.html" target="_blank" class="btn whatsapp">
-    💬 Terms Of Service
+     Terms Of Service
   </a>
