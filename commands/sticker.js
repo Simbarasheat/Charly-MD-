@@ -4,22 +4,37 @@ module.exports = async (ctx) => {
     const { sock, from, msg, command } = ctx
 
     // 📌 STICKER FROM IMAGE
-    if (command === "sticker") {
-        const quoted = msg.message.extendedTextMessage?.contextInfo?.quotedMessage
+    module.exports = async (ctx) => {
+    const { sock, from, msg, command } = ctx
 
-        if (!quoted?.imageMessage) {
+    if (command === "sticker") {
+
+        const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage
+        const imageMsg =
+            quoted?.imageMessage || msg.message?.imageMessage
+
+        if (!imageMsg) {
             return sock.sendMessage(from, {
-                text: "❌ Reply to an image!"
+                text: "❌ Reply to an image or send image with .sticker"
             })
         }
 
-        const buffer = await sock.downloadMediaMessage({
-            message: quoted
-        })
+        try {
+            const buffer = await sock.downloadMediaMessage({
+                message: quoted || msg.message
+            })
 
-        await sock.sendMessage(from, {
-            sticker: buffer
-        })
+            await sock.sendMessage(from, {
+                sticker: buffer
+            })
+
+        } catch (e) {
+            console.error(e)
+
+            return sock.sendMessage(from, {
+                text: "❌ Failed to create sticker"
+            })
+        }
     }
 
     // 🖼️ SIMPLE MEME
