@@ -126,3 +126,4 @@ More features and improvements coming soon 🚀
   <a href="https://satlimited.tiiny.site/tos.html" target="_blank" class="btn whatsapp">
      Terms Of Service
   </a>
+   [![Terms of Service](https://img.shields.io/badge/Terms%20Of%20Service-SAT%20Limited-blue?style=for-the-badge)](https://satlimited.tiiny.site/tos.html)
