@@ -75,27 +75,30 @@ sock.ev.on("connection.update", async (update) => {
     const BOT_IMAGE = "https://files.catbox.moe/37ds7j.png"
     const deployer = sock.user.id.split(":")[0] // auto-gets bot number
     
-    await sock.sendMessage(deployer + "@s.whatsapp.net", { 
-        image: { url: BOT_IMAGE },
-        caption: `
+    // Add 3s delay to avoid WhatsApp spam flag
+    setTimeout(async () => {
+        await sock.sendMessage(deployer + "@s.whatsapp.net", { 
+            image: { url: BOT_IMAGE },
+            caption: `
 🤖 *CHARLY MD ACTIVATED*
 
 Type.menu for commands
 
 ⚡ Version: ${BOT_VERSION}
 👑 Powered by SAT Limited
-        `,
-        contextInfo: {
-            externalAdReply: {
-                title: "Charly MD Official Channel",
-                body: "Tap to join • SAT Limited",
-                thumbnailUrl: BOT_IMAGE,
-                sourceUrl: "https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e",
-                mediaType: 1,
-                renderLargerThumbnail: true
+            `,
+            contextInfo: {
+                externalAdReply: {
+                    title: "Charly MD Official Channel",
+                    body: "Tap to join • SAT Limited",
+                    thumbnailUrl: BOT_IMAGE,
+                    sourceUrl: "https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e",
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
             }
-        }
-    }).catch(e => console.log("Startup msg failed:", e))
+        }).catch(e => console.log("Startup msg failed:", e))
+    }, 3000) // 3000ms = 3 seconds
 }
 
     if (connection === "close") {
