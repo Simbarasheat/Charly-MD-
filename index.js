@@ -166,9 +166,9 @@ const { phone } = req.body
         return res.status(400).json({ error: "Phone number is required" })
     }
 
-    if (!sock || !sock.user) {
-        return res.status(503).json({ error: "Bot is still starting. Please wait..." })
-    }
+    if (!sock) {
+  return res.status(503).json({ error: "Bot is not ready yet. Try again in a few seconds." })
+}
 
     const code = await sock.requestPairingCode(phone)
     res.json({ code })
