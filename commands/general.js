@@ -10,7 +10,7 @@ if (fs.existsSync("./database/mode.json")) {
 }
 
 module.exports = async (ctx) => {
-    const { sock, from, command, args } = ctx
+    const { sock, from, command, args, sender } = ctx
 
     if (command === "ping") {
         await sock.sendMessage(from, { text: "🏓 Pong!" })
@@ -66,6 +66,7 @@ module.exports = async (ctx) => {
 🔐 OWNER COMMANDS
 .owner - Bot owner info 👑
 .update - Bot update status
+.mode public/private/self
 
 📢 OFFICIAL CHANNEL
 🔗https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e
