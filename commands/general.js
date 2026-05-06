@@ -1,5 +1,8 @@
 const fs = require("fs")
 
+// 📸 Bot image (you can replace this link anytime)
+const BOT_IMAGE = "https://files.catbox.moe/37ds7j.png"
+
 module.exports = async (ctx) => {
     const { sock, from, command, args } = ctx
 
