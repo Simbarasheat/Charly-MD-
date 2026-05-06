@@ -123,6 +123,6 @@ More features and improvements coming soon 🚀
  © 2026 SAT Limited. All rights reserved.
 
  <!-- Terms Of Service Button -->
-  <a
+  </a>
  [![Terms of Service](https://img.shields.io/badge/Terms%20Of%20Service-SAT%20Limited-blue?style=for-the-badge)](https://satlimited.tiiny.site/tos.html)
   </a>
