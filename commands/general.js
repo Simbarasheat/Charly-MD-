@@ -12,6 +12,19 @@ if (fs.existsSync("./database/mode.json")) {
 module.exports = async (ctx) => {
     const { sock, from, command, args, sender } = ctx
 
+const ownerNumber = "260772697513@s.whatsapp.net" // your number
+
+const isOwner = (sender) => sender === ownerNumber
+
+// MODE SYSTEM
+if (mode === "private" && !isOwner(sender)) {
+    return sock.sendMessage(from, { text: "⛔ Bot is in PRIVATE mode" })
+}
+
+    if (mode === "self" && !isOwner(sender)) {
+    return
+}
+
     if (command === "ping") {
         await sock.sendMessage(from, { text: "🏓 Pong!" })
     }
@@ -140,6 +153,31 @@ More updates coming soon 🚀
     `.trim()
 
     return await sock.sendMessage(from, { text: message })
+}
+
+    if (command === "mode") {
+
+    const newMode = args[0]
+
+    if (!newMode) {
+        return sock.sendMessage(from, {
+            text: `📌 Current mode: ${mode}\n\nUse:\n.mode public\n.mode private\n.mode self`
+        })
+    }
+
+    if (!["public", "private", "self"].includes(newMode)) {
+        return sock.sendMessage(from, {
+            text: "❌ Use: public, private, self"
+        })
+    }
+
+    mode = newMode
+
+    fs.writeFileSync("./database/mode.json", JSON.stringify({ mode }, null, 2))
+
+    return sock.sendMessage(from, {
+        text: `✅ Mode changed to: ${newMode}`
+    })
 }
 
     // TTS
