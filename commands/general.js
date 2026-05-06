@@ -95,6 +95,7 @@ const isOwner = (sender) => sender === ownerNumber
 │ .play <name> - Play music 🎵
 │ .ytmp4 <link> - Download video 🎥
 │ .tts <text> - Text to speech 🔊
+│ .vv - view once (reply to image or video)
 └───────⭓
 
 ┌──⭓『 🖼️ STICKERS & FUN 』
@@ -108,6 +109,7 @@ const isOwner = (sender) => sender === ownerNumber
 │ .promote - Promote user
 │ .warn - Warn user
 │ .antilink on/off - Block links 🔗
+│ .add <phone number>
 └───────⭓
 
 ┌──⭓『 🔐 OWNER COMMANDS 』
@@ -224,6 +226,37 @@ const isOwner = (sender) => sender === ownerNumber
     return sock.sendMessage(from, {
         text: `✅ Mode changed to: ${newMode}`
     })
+}
+
+    // GROUP COMMANDS
+    if (command === "add") {
+
+    if (!from.endsWith("@g.us")) {
+        return sock.sendMessage(from, { text: "❌ This command only works in groups!" })
+    }
+
+    const number = args[0]
+
+    if (!number) {
+        return sock.sendMessage(from, {
+            text: "❌ Usage:\n.add 2607xxxxxxx"
+        })
+    }
+
+    const jid = number + "@s.whatsapp.net"
+
+    try {
+        await sock.groupParticipantsUpdate(from, [jid], "add")
+
+        return sock.sendMessage(from, {
+            text: `✅ Successfully added ${number} to the group`
+        })
+
+    } catch (err) {
+        return sock.sendMessage(from, {
+            text: "❌ Failed to add user. Make sure:\n- Bot is admin\n- Number is correct"
+        })
+    }
 }
 
     // TTS
