@@ -228,6 +228,62 @@ const isOwner = (sender) => sender === ownerNumber
     })
 }
 
+if (command === "vv") {
+
+    // must be a reply
+    if (!ctx.m || !ctx.m.message) {
+        return sock.sendMessage(from, {
+            text: "❌ Reply to a view-once image or video!"
+        })
+    }
+
+    const msg = ctx.m.message
+
+    let viewOnce =
+        msg.viewOnceMessageV2?.message ||
+        msg.viewOnceMessage?.message
+
+    if (!viewOnce) {
+        return sock.sendMessage(from, {
+            text: "❌ This is not a view-once message!"
+        })
+    }
+
+    await sock.sendMessage(from, {
+        text: "🔓 Revealing view-once media..."
+    })
+
+    try {
+
+        // IMAGE
+        if (viewOnce.imageMessage) {
+            const buffer = await sock.downloadMediaMessage(ctx.m)
+
+            return await sock.sendMessage(from, {
+                image: buffer,
+                caption: viewOnce.imageMessage.caption || ""
+            })
+        }
+
+        // VIDEO
+        if (viewOnce.videoMessage) {
+            const buffer = await sock.downloadMediaMessage(ctx.m)
+
+            return await sock.sendMessage(from, {
+                video: buffer,
+                caption: viewOnce.videoMessage.caption || ""
+            })
+        }
+
+    } catch (err) {
+        console.log(err)
+
+        return sock.sendMessage(from, {
+            text: "❌ Failed to retrieve view-once media."
+        })
+    }
+}
+
     // GROUP COMMANDS
     if (command === "add") {
 
