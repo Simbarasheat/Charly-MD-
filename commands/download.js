@@ -4,31 +4,41 @@ const ytdl = require("ytdl-core")
 module.exports = async (ctx) => {
     const { sock, from, command, args } = ctx
 
-    // 🎵 PLAY (search + audio)
+    // 🎵 PLAY AUDIO
     if (command === "play") {
-        const query = args.slice(1).join(" ")
+
+        const query = args.join(" ")
 
         if (!query) {
-            return sock.sendMessage(from, { text: "❌ Give song name!" })
+            return sock.sendMessage(from, {
+                text: "❌ Give song name!\nExample: .play calm down"
+            })
         }
 
-        const search = await yts(query)
-        const video = search.videos[0]
+        try {
+            const search = await yts(query)
+            const video = search.videos[0]
 
-        if (!video) {
-            return sock.sendMessage(from, { text: "❌ Not found!" })
+            if (!video) {
+                return sock.sendMessage(from, { text: "❌ No results found!" })
+            }
+
+            await sock.sendMessage(from, {
+                text: `🎶 *${video.title}*\n⏳ Downloading audio...`
+            })
+
+            const stream = ytdl(video.url, { filter: "audioonly" })
+
+            await sock.sendMessage(from, {
+                audio: stream,
+                mimetype: "audio/mp4",
+                fileName: `${video.title}.mp3`
+            })
+
+        } catch (e) {
+            console.error(e)
+            await sock.sendMessage(from, { text: "❌ Error playing song" })
         }
-
-        await sock.sendMessage(from, {
-            text: `🎶 *${video.title}*\n${video.url}`
-        })
-
-        const stream = ytdl(video.url, { filter: "audioonly" })
-
-        await sock.sendMessage(from, {
-            audio: stream,
-            mimetype: "audio/mp4"
-        })
     }
 
     // 🎥 YTMP4
