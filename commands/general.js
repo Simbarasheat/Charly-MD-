@@ -17,39 +17,59 @@ module.exports = async (ctx) => {
     }
 
     if (command === "menu") {
-    await sock.sendMessage(from, {
+    return sock.sendMessage(from, {
         image: { url: BOT_IMAGE },
         caption: `
-🤖 *CHARLY MD BOT MENU*
- 
- Owner: SAT Limited Dev
- Prefix: (.)
+╭━━━〔 🤖 CHARLY MD BOT 〕━━━╮
+┃ 👑 Owner: SAT Limited Dev
+┃ ⚙️ Prefix: .
+┃ 📡 Status: Online 🚀
+╰━━━━━━━━━━━━━━━━━━━━━━╯
 
 ⚡ MAIN COMMANDS
 .ping - Check bot speed
-.alive - Check if bot is running
-.menu - Show this menu
-.pair 
-.gpt - AI
-etc
+.alive - Check bot status
+.menu - Show full menu
+.gpt - AI chatbot 🤖
+.pair - Link WhatsApp bot
 
-🎉 FUN COMMANDS
-.joke - Random joke
+🧠 AI SYSTEM
+.gpt <text> - Ask AI anything
+
+🎮 GAMES
+.guess - Number guessing game
+.trivia - Trivia questions
+.answer - Answer trivia
 
 🔊 MEDIA
-.tts <text> - Text to speech
-.play
+.play <name> - Play music 🎵
+.ytmp4 <link> - Download video 🎥
+.tts <text> - Text to speech 🔊
 
-🫂 GROUP COMMANDS
-.kick
-.promote
-.antilink on/off
-.warn
+🖼️ STICKERS & FUN
+.sticker - Convert image to sticker
+.meme - Random meme 😂
+.joke - Random joke
 
-🔥 NOTE
- 1. More Commands Coming Soon.
+👮 GROUP COMMANDS
+.kick - Remove user
+.promote - Promote user
+.warn - Warn user
+.antilink on/off - Block links 🔗
 
-👑 Powered by SAT Limited
+🔐 OWNER COMMANDS
+.owner - Bot owner info 👑
+.update - Bot update status
+
+📢 OFFICIAL CHANNEL
+🔗 SAT Bot Network
+https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e
+
+📌 INFO
+Bot created by SAT Limited
+More updates coming soon 🚀
+
+╰━━━━━━━━━━━━━━━━━━━━━━╯
         `
     })
 }
