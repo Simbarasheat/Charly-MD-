@@ -47,7 +47,7 @@ const isOwner = (sender) => sender === ownerNumber
 ┃ 👑 Owner: SAT Limited Dev
 ┃ ⚙️ Prefix: .
 ┃ 📡 Status: Online 🚀
-┃ 🔐 Mode: ${mode}
+┃ 🔐 Mode: ${JSON.parse(fs.readFileSync("./database/mode.json")).mode}
 ╰━━━━━━━━━━━━━━━━━━━━━━╯
 
 ⚡ MAIN COMMANDS
