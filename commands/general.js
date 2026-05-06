@@ -73,11 +73,28 @@ More updates coming soon 🚀
     })
 }
 
-    if (command === "joke") {
-        await sock.sendMessage(from, {
-            text: "😂 Why did the dev go broke? Because he used up all his cache."
-        })
-    }
+    commands.joke = async (ctx) => {
+    const { sock, from } = ctx
+
+    const jokes = [
+        "😂 Why did the developer go broke? Because he used up all his cache.",
+        "🤣 Why do programmers prefer dark mode? Because light attracts bugs.",
+        "😆 Why did JavaScript break up with HTML? It found someone more responsive.",
+        "😂 Why did the computer get cold? It forgot to close its Windows.",
+        "🤣 Why do coders hate nature? Too many bugs.",
+        "😆 Why did the function return early? Because it had a date!",
+        "😂 Why did the dev sleep well? Because he debugged everything.",
+        "🤣 Why was the JavaScript file sad? Because it didn’t know how to 'null' its feelings.",
+        "😆 Why did the programmer quit his job? No arrays (a raise).",
+        "😂 Why do programmers drink coffee? To turn code into reality."
+    ]
+
+    const random = jokes[Math.floor(Math.random() * jokes.length)]
+
+    await sock.sendMessage(from, {
+        text: random
+    })
+}
 
     if (command === "owner") {
 
