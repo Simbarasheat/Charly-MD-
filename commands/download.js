@@ -33,17 +33,35 @@ module.exports = async (ctx) => {
 
     // 🎥 YTMP4
     if (command === "ytmp4") {
+
         const url = args[1]
 
         if (!url) {
-            return sock.sendMessage(from, { text: "❌ Give link!" })
+            return sock.sendMessage(from, {
+                text: "❌ Give YouTube link!\nExample: .ytmp4 https://youtube.com/..."
+            })
         }
 
-        const stream = ytdl(url, { filter: "audioandvideo" })
+        try {
+            if (!ytdl.validateURL(url)) {
+                return sock.sendMessage(from, { text: "❌ Invalid YouTube link!" })
+            }
 
-        await sock.sendMessage(from, {
-            video: stream,
-            mimetype: "video/mp4"
-        })
+            await sock.sendMessage(from, {
+                text: "🎥 Downloading video..."
+            })
+
+            const stream = ytdl(url, { filter: "audioandvideo" })
+
+            await sock.sendMessage(from, {
+                video: stream,
+                mimetype: "video/mp4",
+                fileName: "video.mp4"
+            })
+
+        } catch (e) {
+            console.error(e)
+            await sock.sendMessage(from, { text: "❌ Video download failed" })
+        }
     }
 }
