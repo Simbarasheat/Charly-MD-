@@ -3,6 +3,8 @@ const fs = require("fs")
 // 📸 Bot image (you can replace this link anytime)
 const BOT_IMAGE = "https://files.catbox.moe/37ds7j.png"
 
+const BOT_VERSION = "2.0.0"
+
 let mode = "public"
 
 const loadMode = () => {
@@ -44,10 +46,12 @@ const isOwner = (sender) => sender === ownerNumber
         image: { url: BOT_IMAGE },
         caption: `
 ╭━━━〔 🤖 CHARLY MD BOT 〕━━━╮
-┃ 👑 Owner: SAT Limited Dev
+┃ 👑 Owner: SAT Limited Developers
 ┃ ⚙️ Prefix: .
 ┃ 📡 Status: Online 🚀
 ┃ 🔐 Mode: ${JSON.parse(fs.readFileSync("./database/mode.json")).mode}
+┃ ⏱️ Uptime: ${getUptime()}
+┃ 🧩 Version: ${BOT_VERSION}
 ╰━━━━━━━━━━━━━━━━━━━━━━╯
 
 ⚡ MAIN COMMANDS
@@ -126,7 +130,7 @@ More updates coming soon 🚀
     const message = `
 ╭━━━〔 👑 OWNER INFO 〕━━━╮
 ┃ 🤖 Bot: Charly MD
-┃ 👤 Owner: Simbarashe Tembo
+┃ 👤 Owner: Simbarashe Tembo .A.
 ┃ 📞 +260772697513
 ┃ ⚡ SAT Limited
 ╰━━━━━━━━━━━━━━━━━━╯
