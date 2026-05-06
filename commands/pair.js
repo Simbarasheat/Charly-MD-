@@ -1,11 +1,12 @@
 const makeWASocket = require("@whiskeysockets/baileys").default
 const { useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys")
 
-module.exports = async function pair(context) {
-    const { sock, from, args } = context
+module.exports = async (ctx) => {
+    const { sock, from, command, args } = ctx
 
-    try {
-        const phone = args[1]
+    if (command === "pair") {
+
+        const phone = args.join(" ").replace(/[^0-9]/g, "")
 
         if (!phone) {
             return sock.sendMessage(from, {
@@ -13,31 +14,42 @@ module.exports = async function pair(context) {
             })
         }
 
-        // clean number
-        const cleanPhone = phone.replace(/[^0-9]/g, "")
+        try {
+            const { state } = await useMultiFileAuthState("./temp-session")
+            const { version } = await fetchLatestBaileysVersion()
 
-        const { state } = await useMultiFileAuthState("temp-session")
-        const { version } = await fetchLatestBaileysVersion()
+            const tempSock = makeWASocket({
+                version,
+                auth: state,
+                printQRInTerminal: false
+            })
 
-        const tempSock = makeWASocket({
-            version,
-            auth: state,
-            printQRInTerminal: false
-        })
+            const code = await tempSock.requestPairingCode(phone)
 
-        const code = await tempSock.requestPairingCode(cleanPhone)
+            await sock.sendMessage(from, {
+                text: `
+🔗 *PAIRING CODE*
 
-        await sock.sendMessage(from, {
-            text: `🔗 *Pairing Code*\n\n${code}\n\n⚠️ Use WhatsApp → Link Device`
-        })
+${code}
 
-        await tempSock.ws.close()
+📱 Open WhatsApp:
+Settings → Linked Devices → Link with code
+                `.trim()
+            })
 
-    } catch (err) {
-        console.error("Pair error:", err)
+            // DO NOT instantly close — give time for generation
+            setTimeout(() => {
+                try {
+                    tempSock.end()
+                } catch (e) {}
+            }, 5000)
 
-        await sock.sendMessage(from, {
-            text: "❌ Failed to generate pairing code"
-        })
+        } catch (err) {
+            console.error(err)
+
+            return sock.sendMessage(from, {
+                text: "❌ Failed to generate pairing code"
+            })
+        }
     }
 }
