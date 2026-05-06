@@ -31,6 +31,7 @@ const games = require("./commands/games")
 const ai = require("./commands/ai")
 const download = require("./commands/download")
 const sticker = require("./commands/sticker")
+const pair = require("./commands/pair")
 
 let isStarting = false
 let retryCount = 0
@@ -145,6 +146,7 @@ sock.ev.on("messages.upsert", async ({ messages }) => {
         await games(context)
         await download(context)
         await sticker(context)
+        await pair(context)
 
     } catch (err) {
         console.error("❌ Message handling error:", err)
