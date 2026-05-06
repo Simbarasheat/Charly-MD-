@@ -73,7 +73,7 @@ More updates coming soon 🚀
     })
 }
 
-    commands.joke = async (ctx) => {
+    if (command === "joke") {
     const { sock, from } = ctx
 
     const jokes = [
