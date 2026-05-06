@@ -30,6 +30,8 @@ loadMode()
 module.exports = async (ctx) => {
     const { sock, from, command, args, sender } = ctx
 
+const start = Date.now()
+
 const ownerNumber = "260772697513@s.whatsapp.net" // your number
 
 const isOwner = (sender) => sender === ownerNumber
