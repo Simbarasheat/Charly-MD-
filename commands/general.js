@@ -47,6 +47,7 @@ const isOwner = (sender) => sender === ownerNumber
 ┃ 👑 Owner: SAT Limited Dev
 ┃ ⚙️ Prefix: .
 ┃ 📡 Status: Online 🚀
+┃ 🔐 Mode: ${mode}
 ╰━━━━━━━━━━━━━━━━━━━━━━╯
 
 ⚡ MAIN COMMANDS
