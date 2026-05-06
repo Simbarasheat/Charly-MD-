@@ -24,16 +24,18 @@ module.exports = async (ctx) => {
 
     // 🖼️ SIMPLE MEME
     if (command === "meme") {
+
         const memes = [
             "https://i.imgflip.com/30b1gx.jpg",
-            "https://i.imgflip.com/1bij.jpg"
+            "https://i.imgflip.com/1bij.jpg",
+            "https://i.imgflip.com/26am.jpg"
         ]
 
         const random = memes[Math.floor(Math.random() * memes.length)]
 
-        await sock.sendMessage(from, {
+        return sock.sendMessage(from, {
             image: { url: random },
-            caption: "😂 Meme"
+            caption: "😂 *Random Meme*"
         })
     }
 }
