@@ -365,28 +365,48 @@ module.exports = async (ctx) => {
         })
     }
 
-    if (command === "update") {
+    const fs = require("fs")
+const { exec } = require("child_process")
 
-        if (!isOwner(sender)) {
+if (command === "update") {
+
+    if (!isOwner(sender)) {
+        return sock.sendMessage(from, {
+            text: "❌ Owner only."
+        })
+    }
+
+    await sock.sendMessage(from, {
+        text: "🔄 Updating CHARLY MD from GitHub..."
+    })
+
+    exec("git pull", async (err, stdout, stderr) => {
+
+        if (err) {
+
+            console.log(err)
+
             return sock.sendMessage(from, {
-                text: "❌ Owner only command."
+                text: `❌ Update failed:\n${err.message}`
             })
         }
 
-        const message = `
-🔄 *BOT UPDATE MODE*
+        if (stderr) {
+            console.log(stderr)
+        }
 
-👨‍💻 Developer: SAT Limited
-📦 Status: Updating bot components...
-⚙️ Changes: System patches applied
-
-✅ Bot updated successfully.
-        `.trim()
-
-        return sock.sendMessage(from, {
-            text: message
+        await sock.sendMessage(from, {
+            text:
+                `✅ Updated successfully!\n\n` +
+                `${stdout}\n` +
+                `♻️ Restarting bot in 3 seconds...`
         })
-    }
+
+        setTimeout(() => {
+            process.exit(0)
+        }, 3000)
+    })
+}
 
     if (command === "mode") {
 
