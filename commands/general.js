@@ -89,6 +89,39 @@ module.exports = async (ctx) => {
         })
     }
 
+    if (command === "settings") {
+
+    if (!from.endsWith("@g.us")) {
+        return sock.sendMessage(from, {
+            text: "❌ This command only works in groups."
+        })
+    }
+
+    const welcomeStatus = settings?.welcome?.[from] ? "ON" : "OFF"
+    const antilinkStatus = settings?.antilink?.[from] ? "ON" : "OFF"
+
+    return sock.sendMessage(from, {
+        text: `
+⚙️ BOT SETTINGS
+
+🔹 Prefix: ${PREFIX}
+🔹 Mode: ${mode}
+🔹 Owner: 260772697513
+🔹 Version: ${BOT_VERSION}
+
+👥 GROUP SETTINGS
+👋 Welcome: ${welcomeStatus}
+🔗 Antilink: ${antilinkStatus}
+
+🧩 COMMANDS:
+.setprefix <symbol>
+.mode public/private/self
+.welcome on/off
+.antilink on/off
+        `
+    })
+}
+
     if (command === "alive") {
 
         return sock.sendMessage(from, {
@@ -108,7 +141,7 @@ module.exports = async (ctx) => {
             caption: `
 ╭━━━〔 🤖 CHARLY MD BOT 〕━━━╮
 ┃ 👑 Owner: SAT Limited Developers
-┃ ⚙️ Prefix: .
+┃ ⚙️ Prefix: (.)
 ┃ 📡 Status: Online 🚀
 ┃ 🔐 Mode: ${mode}
 ┃ ⏱️ Uptime: ${getUptime()}
@@ -121,6 +154,7 @@ module.exports = async (ctx) => {
 │ .menu - Show full menu
 │ .gpt - AI chatbot 🤖
 │ .pair - Link WhatsApp bot
+│ .settings
 └───────⭓
 
 ┌──⭓『 🧠 AI SYSTEM 』
