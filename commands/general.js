@@ -256,67 +256,71 @@ module.exports = async (ctx) => {
     // 🔊 MEDIA COMMANDS
     // ===============================
 
+    const { downloadContentFromMessage } = require("@whiskeysockets/baileys")
+
+module.exports = async (ctx) => {
+    const { sock, from, command, msg } = ctx
+
     if (command === "vv") {
-
-        if (!ctx.m || !ctx.m.message) {
-            return sock.sendMessage(from, {
-                text: "❌ Reply to a view-once image or video!"
-            })
+        const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage
+        
+        if (!quoted) {
+            return sock.sendMessage(from, { 
+                text: "❌ Reply to a view-once image or video!\n\n*Usage:* Reply .vv to view-once" 
+            }, { quoted: msg })
         }
-
-        const msg = ctx.m.message
-
-        let viewOnce =
-            msg.viewOnceMessageV2?.message ||
-            msg.viewOnceMessage?.message
-
-        if (!viewOnce) {
-            return sock.sendMessage(from, {
-                text: "❌ This is not a view-once message!"
-            })
-        }
-
-        await sock.sendMessage(from, {
-            text: "🔓 Revealing view-once media..."
-        })
 
         try {
+            // Handle all WhatsApp view-once versions
+            const viewOnceMsg = 
+                quoted.viewOnceMessage?.message ||
+                quoted.viewOnceMessageV2?.message ||
+                quoted.viewOnceMessageV2Extension?.message
 
-            // IMAGE
-            if (viewOnce.imageMessage) {
+            if (!viewOnceMsg) {
+                return sock.sendMessage(from, { 
+                    text: "❌ That's not a view-once message!" 
+                }, { quoted: msg })
+            }
 
-                const buffer =
-                    await sock.downloadMediaMessage(ctx.m)
+            const mediaType = viewOnceMsg.imageMessage ? "image" : viewOnceMsg.videoMessage ? "video" : null
+            
+            if (!mediaType) {
+                return sock.sendMessage(from, { 
+                    text: "❌ Only works on view-once images/videos!" 
+                }, { quoted: msg })
+            }
 
-                return sock.sendMessage(from, {
+            const mediaMsg = viewOnceMsg.imageMessage || viewOnceMsg.videoMessage
+            
+            const stream = await downloadContentFromMessage(mediaMsg, mediaType)
+            let buffer = Buffer.from([])
+            for await (const chunk of stream) {
+                buffer = Buffer.concat([buffer, chunk])
+            }
+
+            if (buffer.length === 0) throw new Error("Empty buffer")
+
+            if (mediaType === "image") {
+                await sock.sendMessage(from, {
                     image: buffer,
-                    caption:
-                        viewOnce.imageMessage.caption || ""
-                })
-            }
-
-            // VIDEO
-            if (viewOnce.videoMessage) {
-
-                const buffer =
-                    await sock.downloadMediaMessage(ctx.m)
-
-                return sock.sendMessage(from, {
+                    caption: `✅ *View-Once Saved*\n⚡ SAT Limited`
+                }, { quoted: msg })
+            } else {
+                await sock.sendMessage(from, {
                     video: buffer,
-                    caption:
-                        viewOnce.videoMessage.caption || ""
-                })
+                    caption: `✅ *View-Once Saved*\n⚡ SAT Limited`
+                }, { quoted: msg })
             }
 
-        } catch (err) {
-
-            console.log(err)
-
-            return sock.sendMessage(from, {
-                text: "❌ Failed to retrieve view-once media."
-            })
+        } catch (e) {
+            console.error("VV error:", e.message)
+            await sock.sendMessage(from, { 
+                text: "❌ Failed to save!\n*Reason:* Already opened or expired" 
+            }, { quoted: msg })
         }
     }
+}
 
     // ===============================
     // 🔊 TTS COMMAND
