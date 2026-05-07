@@ -156,6 +156,7 @@ module.exports = async (ctx) => {
 │ .owner - Bot owner info 👑
 │ .update - Bot update status
 │ .mode public/private/self
+│ .channel
 └───────⭓
 
 📢 OFFICIAL CHANNEL
@@ -405,6 +406,19 @@ if (command === "update") {
         setTimeout(() => {
             process.exit(0)
         }, 3000)
+    })
+}
+
+    if (command === "channel") {
+
+    return sock.sendMessage(from, {
+        text: `
+📢 OFFICIAL CHANNEL
+
+https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e
+
+👑 SAT Limited Updates
+        `
     })
 }
 
