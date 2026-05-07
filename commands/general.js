@@ -192,6 +192,7 @@ module.exports = async (ctx) => {
 │ .warn - Warn user
 │ .antilink on/off - Block links 🔗
 │ .add <phone number>
+│ .welcome on/off
 └───────⭓
 
 ┌──⭓『 🔐 OWNER COMMANDS 』
@@ -215,7 +216,6 @@ module.exports = async (ctx) => {
                 externalAdReply: {
                     title: "Charly MD Official Channel",
                     body: "Powered by SAT Limited",
-                    thumbnailUrl: BOT_IMAGE,
                     sourceUrl:
                         "https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e",
                     mediaType: 1,
