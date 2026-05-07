@@ -157,6 +157,7 @@ module.exports = async (ctx) => {
 │ .update - Bot update status
 │ .mode public/private/self
 │ .channel
+│ .setprefix
 └───────⭓
 
 📢 OFFICIAL CHANNEL
@@ -419,6 +420,29 @@ https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e
 
 👑 SAT Limited Updates
         `
+    })
+}
+
+if (command === "setprefix") {
+
+    if (!isOwner(sender)) {
+        return sock.sendMessage(from, {
+            text: "❌ Owner only command."
+        })
+    }
+
+    const newPrefix = args[0]
+
+    if (!newPrefix) {
+        return sock.sendMessage(from, {
+            text: `⚙️ Current prefix: ${PREFIX}\n\nUsage:\n.setprefix !`
+        })
+    }
+
+    PREFIX = newPrefix
+
+    return sock.sendMessage(from, {
+        text: `✅ Prefix changed successfully!\n\nNew prefix: ${PREFIX}`
     })
 }
 
