@@ -68,37 +68,50 @@ sock.ev.on("connection.update", async (update) => {
 
     if (connection === "open") {
     console.log("✅ Bot connected to WhatsApp!")
+
     latestQR = null
     retryCount = 0
 
-    const BOT_VERSION = "2.0.0"
-    const BOT_IMAGE = "https://files.catbox.moe/37ds7j.png"
-    const deployer = sock.user.id.split(":")[0] // auto-gets bot number
-    
-    // Add 3s delay to avoid WhatsApp spam flag
+    const deployer = sock.user?.id?.split(":")[0]
+
+    // ⏱️ 3 second delay before sending startup message
     setTimeout(async () => {
-        await sock.sendMessage(deployer + "@s.whatsapp.net", { 
-            image: { url: BOT_IMAGE },
-            caption: `
-🤖 *CHARLY MD ACTIVATED*
+        try {
 
-Type.menu for commands
+            const msg = await sock.sendMessage(
+                deployer + "@s.whatsapp.net",
+                {
+                    image: { url: BOT_IMAGE },
+                    caption: `
+🤖 CHARLY MD ACTIVATED
 
-⚡ Version: ${BOT_VERSION}
+Type .menu for commands
+
+⚡ Version: 2.0.0
 👑 Powered by SAT Limited
-            `,
-            contextInfo: {
-                externalAdReply: {
-                    title: "Charly MD Official Channel",
-                    body: "Tap to join • SAT Limited",
-                    thumbnailUrl: BOT_IMAGE,
-                    sourceUrl: "https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e",
-                    mediaType: 1,
-                    renderLargerThumbnail: true
+                    `
                 }
-            }
-        }).catch(e => console.log("Startup msg failed:", e))
-    }, 3000) // 3000ms = 3 seconds
+            )
+
+            // ⏱️ Auto delete after 1 minute
+            setTimeout(async () => {
+                try {
+                    await sock.sendMessage(
+                        deployer + "@s.whatsapp.net",
+                        {
+                            delete: msg.key
+                        }
+                    )
+                } catch (e) {
+                    console.log("Auto delete failed:", e)
+                }
+            }, 60000)
+
+        } catch (e) {
+            console.log("Startup message failed:", e)
+        }
+
+    }, 3000) // 3 seconds delay
 }
 
     if (connection === "close") {
