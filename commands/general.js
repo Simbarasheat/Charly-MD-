@@ -9,6 +9,8 @@ const BOT_VERSION = "2.0.0"
 
 const startTime = Date.now()
 
+const PREFIX = "."
+
 const getUptime = () => {
     const seconds = Math.floor((Date.now() - startTime) / 1000)
 
