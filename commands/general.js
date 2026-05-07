@@ -165,6 +165,7 @@ module.exports = async (ctx) => {
 
 ┌──⭓『 🧠 AI SYSTEM 』
 │ .gpt <text> - Ask AI anything
+│ .lyrics 
 └───────⭓
 
 ┌──⭓『 🎮 GAMES 』
