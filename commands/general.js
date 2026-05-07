@@ -27,6 +27,10 @@ const getUptime = () => {
 // 🔐 MODE SYSTEM
 // ===============================
 
+if (fs.existsSync("./database/settings.json")) {
+    settings = JSON.parse(fs.readFileSync("./database/settings.json"))
+}
+
 let mode = "public"
 
 const loadMode = () => {
