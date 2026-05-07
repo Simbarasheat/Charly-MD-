@@ -9,6 +9,8 @@ const BOT_VERSION = "2.0.0"
 
 const startTime = Date.now()
 
+let settings = {}
+
 const PREFIX = "."
 
 const getUptime = () => {
