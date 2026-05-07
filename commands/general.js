@@ -1,11 +1,13 @@
 const fs = require("fs")
 
-// 📸 Bot image (you can replace this link anytime)
+// ===============================
+// 📸 BOT SETTINGS
+// ===============================
+
 const BOT_IMAGE = "https://files.catbox.moe/37ds7j.png"
+const BOT_VERSION = "2.0.0"
 
 const startTime = Date.now()
-
-const BOT_VERSION = "2.0.0"
 
 const getUptime = () => {
     const seconds = Math.floor((Date.now() - startTime) / 1000)
@@ -17,58 +19,96 @@ const getUptime = () => {
     return `${h}h ${m}m ${s}s`
 }
 
+// ===============================
+// 🔐 MODE SYSTEM
+// ===============================
+
 let mode = "public"
 
 const loadMode = () => {
     if (fs.existsSync("./database/mode.json")) {
-        mode = JSON.parse(fs.readFileSync("./database/mode.json")).mode
+        mode = JSON.parse(
+            fs.readFileSync("./database/mode.json")
+        ).mode
     }
 }
 
 loadMode()
 
-module.exports = async (ctx) => {
-    const { sock, from, command, args, sender } = ctx
+// ===============================
+// 👑 OWNER SETTINGS
+// ===============================
 
-const start = Date.now()
-
-const ownerNumber = "260772697513@s.whatsapp.net" // your number
+const ownerNumber = "260772697513@s.whatsapp.net"
 
 const isOwner = (sender) => sender === ownerNumber
 
-    // MODE SYSTEM
+// ===============================
+// 🚀 MAIN EXPORT
+// ===============================
+
+module.exports = async (ctx) => {
+
+    const {
+        sock,
+        from,
+        command,
+        args,
+        sender
+    } = ctx
+
+    const start = Date.now()
+
+    // ===============================
+    // 🔒 PRIVATE / SELF MODE
+    // ===============================
+
     if (mode === "private" && !isOwner(sender)) {
-    return sock.sendMessage(from, { text: "⛔ Bot is in PRIVATE mode" })
-}
+        return sock.sendMessage(from, {
+            text: "⛔ Bot is in PRIVATE mode"
+        })
+    }
 
     if (mode === "self" && !isOwner(sender)) {
-    return
-}
+        return
+    }
+
+    // ===============================
+    // ⚡ MAIN COMMANDS
+    // ===============================
 
     if (command === "ping") {
-    const end = Date.now()
-    const ping = end - start
 
-    await sock.sendMessage(from, {
-        text: `🏓 Pong!\n⚡ Speed: ${ping}ms`
-    })
-}
+        const end = Date.now()
+        const ping = end - start
+
+        return sock.sendMessage(from, {
+            text: `🏓 Pong!\n⚡ Speed: ${ping}ms`
+        })
+    }
 
     if (command === "alive") {
-        await sock.sendMessage(from, {
+
+        return sock.sendMessage(from, {
             text: "✅ Charly MD Bot is running 🚀"
         })
     }
 
+    // ===============================
+    // 📜 MENU COMMAND
+    // ===============================
+
     if (command === "menu") {
-    return sock.sendMessage(from, {
-        image: { url: BOT_IMAGE },
-        caption: `
+
+        return sock.sendMessage(from, {
+            image: { url: BOT_IMAGE },
+
+            caption: `
 ╭━━━〔 🤖 CHARLY MD BOT 〕━━━╮
 ┃ 👑 Owner: SAT Limited Developers
 ┃ ⚙️ Prefix: .
 ┃ 📡 Status: Online 🚀
-┃ 🔐 Mode: ${JSON.parse(fs.readFileSync("./database/mode.json")).mode}
+┃ 🔐 Mode: ${mode}
 ┃ ⏱️ Uptime: ${getUptime()}
 ┃ 🧩 Version: ${BOT_VERSION}
 ╰━━━━━━━━━━━━━━━━━━━━━━╯
@@ -95,7 +135,7 @@ const isOwner = (sender) => sender === ownerNumber
 │ .play <name> - Play music 🎵
 │ .ytmp4 <link> - Download video 🎥
 │ .tts <text> - Text to speech 🔊
-│ .vv - view once (reply to image or video)
+│ .vv - View once media
 └───────⭓
 
 ┌──⭓『 🖼️ STICKERS & FUN 』
@@ -125,72 +165,215 @@ const isOwner = (sender) => sender === ownerNumber
 │ Bot created by SAT Limited
 │ More updates coming soon 🚀
 ╰━━━━━━━━━━━━━━━━━━━━━━╯
-        `,
-        contextInfo: {
-            externalAdReply: {
-                title: "Charly MD Official Channel",
-                body: "Powered by SAT Limited",
-                thumbnailUrl: BOT_IMAGE,
-                sourceUrl: "https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e",
-                mediaType: 1,
-                renderLargerThumbnail: true
+            `,
+
+            contextInfo: {
+                externalAdReply: {
+                    title: "Charly MD Official Channel",
+                    body: "Powered by SAT Limited",
+                    thumbnailUrl: BOT_IMAGE,
+                    sourceUrl:
+                        "https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e",
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
             }
-        }
-    })
-}  
+        })
+    }
 
-
+    // ===============================
+    // 😂 FUN COMMANDS
+    // ===============================
 
     if (command === "joke") {
-    const { sock, from } = ctx
 
-    const jokes = [
-        "😂 Why did the developer go broke? Because he used up all his cache.",
-        "🤣 Why do programmers prefer dark mode? Because light attracts bugs.",
-        "😆 Why did JavaScript break up with HTML? It found someone more responsive.",
-        "😂 Why did the computer get cold? It forgot to close its Windows.",
-        "🤣 Why do coders hate nature? Too many bugs.",
-        "😆 Why did the function return early? Because it had a date!",
-        "😂 Why did the dev sleep well? Because he debugged everything.",
-        "🤣 Why was the JavaScript file sad? Because it didn’t know how to 'null' its feelings.",
-        "😆 Why did the programmer quit his job? No arrays (a raise).",
-        "😂 Why do programmers drink coffee? To turn code into reality."
-    ]
+        const jokes = [
+            "😂 Why did the developer go broke? Because he used up all his cache.",
+            "🤣 Why do programmers prefer dark mode? Because light attracts bugs.",
+            "😆 Why did JavaScript break up with HTML? It found someone more responsive.",
+            "😂 Why did the computer get cold? It forgot to close its Windows.",
+            "🤣 Why do coders hate nature? Too many bugs.",
+            "😆 Why did the function return early? Because it had a date!",
+            "😂 Why did the dev sleep well? Because he debugged everything.",
+            "🤣 Why was the JavaScript file sad? Because it didn’t know how to null its feelings.",
+            "😆 Why did the programmer quit his job? No arrays (a raise).",
+            "😂 Why do programmers drink coffee? To turn code into reality."
+        ]
 
-    const random = jokes[Math.floor(Math.random() * jokes.length)]
+        const random =
+            jokes[Math.floor(Math.random() * jokes.length)]
 
-    await sock.sendMessage(from, {
-        text: random
-    })
-}
+        return sock.sendMessage(from, {
+            text: random
+        })
+    }
+
+    // ===============================
+    // 🔊 MEDIA COMMANDS
+    // ===============================
+
+    if (command === "vv") {
+
+        if (!ctx.m || !ctx.m.message) {
+            return sock.sendMessage(from, {
+                text: "❌ Reply to a view-once image or video!"
+            })
+        }
+
+        const msg = ctx.m.message
+
+        let viewOnce =
+            msg.viewOnceMessageV2?.message ||
+            msg.viewOnceMessage?.message
+
+        if (!viewOnce) {
+            return sock.sendMessage(from, {
+                text: "❌ This is not a view-once message!"
+            })
+        }
+
+        await sock.sendMessage(from, {
+            text: "🔓 Revealing view-once media..."
+        })
+
+        try {
+
+            // IMAGE
+            if (viewOnce.imageMessage) {
+
+                const buffer =
+                    await sock.downloadMediaMessage(ctx.m)
+
+                return sock.sendMessage(from, {
+                    image: buffer,
+                    caption:
+                        viewOnce.imageMessage.caption || ""
+                })
+            }
+
+            // VIDEO
+            if (viewOnce.videoMessage) {
+
+                const buffer =
+                    await sock.downloadMediaMessage(ctx.m)
+
+                return sock.sendMessage(from, {
+                    video: buffer,
+                    caption:
+                        viewOnce.videoMessage.caption || ""
+                })
+            }
+
+        } catch (err) {
+
+            console.log(err)
+
+            return sock.sendMessage(from, {
+                text: "❌ Failed to retrieve view-once media."
+            })
+        }
+    }
+
+    // ===============================
+    // 🔊 TTS COMMAND
+    // ===============================
+
+    if (command === "tts") {
+
+        const gTTS = require("gtts")
+
+        const textToSpeak = args.join(" ")
+
+        if (!textToSpeak) {
+            return sock.sendMessage(from, {
+                text: "❌ Give text!"
+            })
+        }
+
+        const gtts = new gTTS(textToSpeak, "en")
+
+        gtts.save("tts.mp3", async () => {
+
+            await sock.sendMessage(from, {
+                audio: fs.readFileSync("tts.mp3"),
+                mimetype: "audio/mp4"
+            })
+        })
+    }
+
+    // ===============================
+    // 👮 GROUP COMMANDS
+    // ===============================
+
+    if (command === "add") {
+
+        if (!from.endsWith("@g.us")) {
+            return sock.sendMessage(from, {
+                text: "❌ This command only works in groups!"
+            })
+        }
+
+        const number = args[0]
+
+        if (!number) {
+            return sock.sendMessage(from, {
+                text: "❌ Usage:\n.add 2607xxxxxxx"
+            })
+        }
+
+        const jid = number + "@s.whatsapp.net"
+
+        try {
+
+            await sock.groupParticipantsUpdate(
+                from,
+                [jid],
+                "add"
+            )
+
+            return sock.sendMessage(from, {
+                text:
+                    `✅ Successfully added ${number} to the group`
+            })
+
+        } catch (err) {
+
+            return sock.sendMessage(from, {
+                text:
+                    "❌ Failed to add user.\nMake sure:\n- Bot is admin\n- Number is correct"
+            })
+        }
+    }
+
+    // ===============================
+    // 👑 OWNER COMMANDS
+    // ===============================
 
     if (command === "owner") {
 
-    const message = `
+        const message = `
 ╭━━━〔 👑 OWNER INFO 〕━━━╮
 ┃ 🤖 Bot: Charly MD
 ┃ 👤 Owner: Simbarashe Tembo .A.
 ┃ 📞 +260772697513
 ┃ ⚡ SAT Limited
 ╰━━━━━━━━━━━━━━━━━━╯
-    `.trim()
+        `.trim()
 
-    return await sock.sendMessage(from, { text: message })
-}
-
-    if (command === "update") {
-
-    // 🔐 ONLY ALLOWED OWNER NUMBER
-    const allowedNumber = "260772697513@s.whatsapp.net"
-
-    if (sender !== allowedNumber) {
-        return await sock.sendMessage(from, {
-            text: "❌ You are not allowed to use this command."
+        return sock.sendMessage(from, {
+            text: message
         })
     }
 
-    // Example update action (edit this part later)
-    const message = `
+    if (command === "update") {
+
+        if (!isOwner(sender)) {
+            return sock.sendMessage(from, {
+                text: "❌ Owner only command."
+            })
+        }
+
+        const message = `
 🔄 *BOT UPDATE MODE*
 
 👨‍💻 Developer: SAT Limited
@@ -198,139 +381,47 @@ const isOwner = (sender) => sender === ownerNumber
 ⚙️ Changes: System patches applied
 
 ✅ Bot updated successfully.
-    `.trim()
+        `.trim()
 
-    return await sock.sendMessage(from, { text: message })
-}
+        return sock.sendMessage(from, {
+            text: message
+        })
+    }
 
     if (command === "mode") {
 
-    const newMode = args[0]
-
-    if (!newMode) {
-        return sock.sendMessage(from, {
-            text: `📌 Current mode: *${mode}*\n\nUse:\n.mode public\n.mode private\n.mode self`
-        })
-    }
-
-    if (!["public", "private", "self"].includes(newMode)) {
-        return sock.sendMessage(from, {
-            text: "❌ Use: public, private, self"
-        })
-    }
-
-    mode = newMode
-
-    fs.writeFileSync("./database/mode.json", JSON.stringify({ mode }, null, 2))
-
-    return sock.sendMessage(from, {
-        text: `✅ Mode changed to: ${newMode}`
-    })
-}
-
-if (command === "vv") {
-
-    // must be a reply
-    if (!ctx.m || !ctx.m.message) {
-        return sock.sendMessage(from, {
-            text: "❌ Reply to a view-once image or video!"
-        })
-    }
-
-    const msg = ctx.m.message
-
-    let viewOnce =
-        msg.viewOnceMessageV2?.message ||
-        msg.viewOnceMessage?.message
-
-    if (!viewOnce) {
-        return sock.sendMessage(from, {
-            text: "❌ This is not a view-once message!"
-        })
-    }
-
-    await sock.sendMessage(from, {
-        text: "🔓 Revealing view-once media..."
-    })
-
-    try {
-
-        // IMAGE
-        if (viewOnce.imageMessage) {
-            const buffer = await sock.downloadMediaMessage(ctx.m)
-
-            return await sock.sendMessage(from, {
-                image: buffer,
-                caption: viewOnce.imageMessage.caption || ""
+        if (!isOwner(sender)) {
+            return sock.sendMessage(from, {
+                text: "❌ Owner only command."
             })
         }
 
-        // VIDEO
-        if (viewOnce.videoMessage) {
-            const buffer = await sock.downloadMediaMessage(ctx.m)
+        const newMode = args[0]
 
-            return await sock.sendMessage(from, {
-                video: buffer,
-                caption: viewOnce.videoMessage.caption || ""
+        if (!newMode) {
+            return sock.sendMessage(from, {
+                text:
+                    `📌 Current mode: *${mode}*\n\n` +
+                    `Use:\n.mode public\n.mode private\n.mode self`
             })
         }
 
-    } catch (err) {
-        console.log(err)
-
-        return sock.sendMessage(from, {
-            text: "❌ Failed to retrieve view-once media."
-        })
-    }
-}
-
-    // GROUP COMMANDS
-    if (command === "add") {
-
-    if (!from.endsWith("@g.us")) {
-        return sock.sendMessage(from, { text: "❌ This command only works in groups!" })
-    }
-
-    const number = args[0]
-
-    if (!number) {
-        return sock.sendMessage(from, {
-            text: "❌ Usage:\n.add 2607xxxxxxx"
-        })
-    }
-
-    const jid = number + "@s.whatsapp.net"
-
-    try {
-        await sock.groupParticipantsUpdate(from, [jid], "add")
-
-        return sock.sendMessage(from, {
-            text: `✅ Successfully added ${number} to the group`
-        })
-
-    } catch (err) {
-        return sock.sendMessage(from, {
-            text: "❌ Failed to add user. Make sure:\n- Bot is admin\n- Number is correct"
-        })
-    }
-}
-
-    // TTS
-    if (command === "tts") {
-        const gTTS = require("gtts")
-        const textToSpeak = args.slice(1).join(" ")
-
-        if (!textToSpeak) {
-            return sock.sendMessage(from, { text: "❌ Give text!" })
+        if (!["public", "private", "self"].includes(newMode)) {
+            return sock.sendMessage(from, {
+                text: "❌ Use: public, private, self"
+            })
         }
 
-        const gtts = new gTTS(textToSpeak, "en")
+        mode = newMode
 
-        gtts.save("tts.mp3", async () => {
-            await sock.sendMessage(from, {
-                audio: fs.readFileSync("tts.mp3"),
-                mimetype: "audio/mp4"
-            })
+        fs.writeFileSync(
+            "./database/mode.json",
+            JSON.stringify({ mode }, null, 2)
+        )
+
+        return sock.sendMessage(from, {
+            text: `✅ Mode changed to: ${newMode}`
         })
     }
+
 }
