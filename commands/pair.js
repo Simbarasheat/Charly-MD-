@@ -6,7 +6,7 @@ module.exports = async (ctx) => {
 
     if (command === "pair") {
 
-        const phone = args.join(" ").replace(/[^0-9]/g, "")
+        const phone = args.join("").replace(/[^0-9]/g, "")
 
         if (!phone) {
             return sock.sendMessage(from, {
@@ -15,7 +15,8 @@ module.exports = async (ctx) => {
         }
 
         try {
-            const { state } = await useMultiFileAuthState("./temp-session")
+
+            const { state, saveCreds } = await useMultiFileAuthState("./temp-session")
             const { version } = await fetchLatestBaileysVersion()
 
             const tempSock = makeWASocket({
@@ -24,28 +25,22 @@ module.exports = async (ctx) => {
                 printQRInTerminal: false
             })
 
-            const code = await tempSock.requestPairingCode(phone)
+            tempSock.ev.on("creds.update", saveCreds)
+
+            const code = await tempSock.requestPairingCode(phone, "CHARLY MD")
 
             await sock.sendMessage(from, {
-                text: `
-🔗 *PAIRING CODE*
-
-${code}
-
-📱 Open WhatsApp:
-Settings → Linked Devices → Link with code
-                `.trim()
+                text: `🔗 *PAIRING CODE*\n\n${code}\n\n📱 Go to WhatsApp → Linked Devices → Link with code`
             })
 
-            // DO NOT instantly close — give time for generation
             setTimeout(() => {
                 try {
                     tempSock.end()
                 } catch (e) {}
-            }, 5000)
+            }, 15000)
 
         } catch (err) {
-            console.error(err)
+            console.log(err)
 
             return sock.sendMessage(from, {
                 text: "❌ Failed to generate pairing code"
