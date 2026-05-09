@@ -196,6 +196,7 @@ module.exports = async (ctx) => {
 │ .antilink on/off - Block links 🔗
 │ .add <phone number>
 │ .welcome on/off
+│ .demote - Remove admin 👮
 └───────⭓
 
 ┌──⭓『 🔐 OWNER COMMANDS 』
@@ -355,6 +356,53 @@ module.exports = async (ctx) => {
     // ===============================
     // 👮 GROUP COMMANDS
     // ===============================
+
+    if (command === "demote") {
+
+    // Group only
+    if (!from.endsWith("@g.us")) {
+        return sock.sendMessage(from, {
+            text: "❌ This command only works in groups!"
+        })
+    }
+
+    // Must reply or mention someone
+    const user =
+        ctx.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] ||
+        ctx.message?.extendedTextMessage?.contextInfo?.participant
+
+    if (!user) {
+        return sock.sendMessage(from, {
+            text: "❌ Reply to or mention a user to demote."
+        })
+    }
+
+    try {
+
+        await sock.groupParticipantsUpdate(
+            from,
+            [user],
+            "demote"
+        )
+
+        await sock.sendMessage(from, {
+            text: `✅ Successfully demoted @${user.split("@")[0]}`,
+            mentions: [user]
+        })
+
+    } catch (e) {
+
+        console.log(e)
+
+        await sock.sendMessage(from, {
+            text:
+                "❌ Failed to demote user.\n\n" +
+                "Make sure:\n" +
+                "- Bot is admin\n" +
+                "- User is admin"
+        })
+    }
+}
 
     if (command === "add") {
 
