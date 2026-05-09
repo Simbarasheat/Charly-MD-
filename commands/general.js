@@ -219,12 +219,11 @@ module.exports = async (ctx) => {
 
             contextInfo: {
                 externalAdReply: {
-                    title: "Charly MD Official Channel",
-                    body: "Powered by SAT Limited",
+                    
                     sourceUrl:
                         "https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e",
                     mediaType: 1,
-                    renderLargerThumbnail: true
+                    renderLargerThumbnail: false
                 }
             }
         })
