@@ -362,21 +362,50 @@ module.exports = async (ctx) => {
 
     if (command === "demote") {
 
-    // Group only
     if (!from.endsWith("@g.us")) {
         return sock.sendMessage(from, {
             text: "❌ This command only works in groups!"
         })
     }
 
-    // Must reply or mention someone
+    const metadata = await sock.groupMetadata(from)
+
+    const botId = sock.user.id
+    const botAdmin = metadata.participants.find(p =>
+        p.id === botId && (p.admin === "admin" || p.admin === "superadmin")
+    )
+
+    if (!botAdmin) {
+        return sock.sendMessage(from, {
+            text: "❌ I must be admin to use this command."
+        })
+    }
+
+    const senderAdmin = metadata.participants.find(p =>
+        p.id === sender && (p.admin === "admin" || p.admin === "superadmin")
+    )
+
+    if (!senderAdmin) {
+        return sock.sendMessage(from, {
+            text: "❌ Only group admins can use this command."
+        })
+    }
+
     const user =
         ctx.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] ||
         ctx.message?.extendedTextMessage?.contextInfo?.participant
 
     if (!user) {
         return sock.sendMessage(from, {
-            text: "❌ Reply to or mention a user to demote."
+            text: "❌ Reply to or mention an admin to demote."
+        })
+    }
+
+    const target = metadata.participants.find(p => p.id === user)
+
+    if (!target || (target.admin !== "admin" && target.admin !== "superadmin")) {
+        return sock.sendMessage(from, {
+            text: "❌ That user is not an admin."
         })
     }
 
@@ -393,16 +422,11 @@ module.exports = async (ctx) => {
             mentions: [user]
         })
 
-    } catch (e) {
+    } catch (err) {
+        console.log(err)
 
-        console.log(e)
-
-        await sock.sendMessage(from, {
-            text:
-                "❌ Failed to demote user.\n\n" +
-                "Make sure:\n" +
-                "- Bot is admin\n" +
-                "- User is admin"
+        return sock.sendMessage(from, {
+            text: "❌ Failed to demote user."
         })
     }
 }
