@@ -47,9 +47,11 @@ loadMode()
 // 👑 OWNER SETTINGS
 // ===============================
 
-const ownerNumber = "260772697513@s.whatsapp.net"
+const ownerNumber = "260772697513"
 
-const isOwner = (sender) => sender === ownerNumber
+const isOwner = (sender) => {
+    return sender.includes(ownerNumber)
+}
 
 // ===============================
 // 🚀 MAIN EXPORT
