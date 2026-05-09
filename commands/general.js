@@ -99,14 +99,15 @@ module.exports = async (ctx) => {
 
     if (command === "settings") {
 
-    if (!from.endsWith("@g.us")) {
-        return sock.sendMessage(from, {
-            text: "❌ This command only works in groups."
-        })
-    }
+    const isGroup = from.endsWith("@g.us")
 
-    const welcomeStatus = settings?.welcome?.[from] ? "ON" : "OFF"
-    const antilinkStatus = settings?.antilink?.[from] ? "ON" : "OFF"
+    const welcomeStatus = isGroup
+        ? (settings?.welcome?.[from] ? "ON" : "OFF")
+        : "GROUP ONLY"
+
+    const antilinkStatus = isGroup
+        ? (settings?.antilink?.[from] ? "ON" : "OFF")
+        : "GROUP ONLY"
 
     return sock.sendMessage(from, {
         text: `
@@ -114,7 +115,7 @@ module.exports = async (ctx) => {
 
 🔹 Prefix: ${PREFIX}
 🔹 Mode: ${mode}
-🔹 Owner: 260772697513
+🔹 Owner: +260772697513
 🔹 Version: ${BOT_VERSION}
 
 👥 GROUP SETTINGS
@@ -127,10 +128,12 @@ module.exports = async (ctx) => {
 .welcome on/off
 .antilink on/off
 .demote - Remove admin 👮
+
+> SAT Limited
         `
     })
 }
-
+    
     if (command === "alive") {
 
         return sock.sendMessage(from, {
