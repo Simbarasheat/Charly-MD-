@@ -126,6 +126,7 @@ module.exports = async (ctx) => {
 .mode public/private/self
 .welcome on/off
 .antilink on/off
+.demote - Remove admin 👮
         `
     })
 }
