@@ -1,20 +1,74 @@
 const fs = require("fs")
+const path = require("path")
+const { exec } = require("child_process")
+const gTTS = require("gtts")
+const {
+    downloadContentFromMessage
+} = require("@whiskeysockets/baileys")
+
+// ===============================
+// 📁 DATABASE SETUP
+// ===============================
+const dbPath = "./database"
+const tempPath = "./temp"
+
+if (!fs.existsSync(dbPath)) {
+    fs.mkdirSync(dbPath)
+}
+
+if (!fs.existsSync(tempPath)) {
+    fs.mkdirSync(tempPath)
+}
 
 // ===============================
 // 📸 BOT SETTINGS
 // ===============================
-
 const BOT_IMAGE = "https://files.catbox.moe/37ds7j.png"
 const BOT_VERSION = "2.0.0"
+const ownerNumber = "260772697513"
 
 const startTime = Date.now()
 
 let settings = {}
+let PREFIX = "."
+let mode = "public"
 
-const PREFIX = "."
+// ===============================
+// 💾 LOAD SETTINGS
+// ===============================
+try {
+    if (fs.existsSync("./database/settings.json")) {
+        settings = JSON.parse(
+            fs.readFileSync("./database/settings.json")
+        )
+    }
+} catch (e) {
+    console.log("Settings load error:", e)
+    settings = {}
+}
 
+if (settings.prefix) {
+    PREFIX = settings.prefix
+}
+
+try {
+    if (fs.existsSync("./database/mode.json")) {
+        mode = JSON.parse(
+            fs.readFileSync("./database/mode.json")
+        ).mode
+    }
+} catch (e) {
+    console.log("Mode load error:", e)
+}
+
+// ===============================
+// ⏱️ UPTIME
+// ===============================
 const getUptime = () => {
-    const seconds = Math.floor((Date.now() - startTime) / 1000)
+
+    const seconds = Math.floor(
+        (Date.now() - startTime) / 1000
+    )
 
     const h = Math.floor(seconds / 3600)
     const m = Math.floor((seconds % 3600) / 60)
@@ -24,55 +78,43 @@ const getUptime = () => {
 }
 
 // ===============================
-// 🔐 MODE SYSTEM
+// 👑 OWNER CHECK
 // ===============================
-
-if (fs.existsSync("./database/settings.json")) {
-    settings = JSON.parse(fs.readFileSync("./database/settings.json"))
-}
-
-let mode = "public"
-
-const loadMode = () => {
-    if (fs.existsSync("./database/mode.json")) {
-        mode = JSON.parse(
-            fs.readFileSync("./database/mode.json")
-        ).mode
-    }
-}
-
-loadMode()
-
-// ===============================
-// 👑 OWNER SETTINGS
-// ===============================
-
-const ownerNumber = "260772697513"
-
 const isOwner = (sender) => {
     return sender.includes(ownerNumber)
 }
 
 // ===============================
-// 🚀 MAIN EXPORT
+// 🧹 SAFE DELETE
 // ===============================
+const safeDelete = (file) => {
+    try {
+        if (fs.existsSync(file)) {
+            fs.unlinkSync(file)
+        }
+    } catch (e) {
+        console.log("Delete error:", e)
+    }
+}
 
+// ===============================
+// 🚀 EXPORT
+// ===============================
 module.exports = async (ctx) => {
 
     const {
         sock,
         from,
         command,
-        args,
-        sender
+        args = [],
+        sender,
+        msg,
+        text
     } = ctx
 
-    const start = Date.now()
-
     // ===============================
-    // 🔒 PRIVATE / SELF MODE
+    // 🔒 MODE SYSTEM
     // ===============================
-
     if (mode === "private" && !isOwner(sender)) {
         return sock.sendMessage(from, {
             text: "⛔ Bot is in PRIVATE mode"
@@ -84,145 +126,106 @@ module.exports = async (ctx) => {
     }
 
     // ===============================
-    // ⚡ MAIN COMMANDS
+    // 🏓 PING
     // ===============================
-
     if (command === "ping") {
 
-        const end = Date.now()
-        const ping = end - start
+        const ping = Date.now() - msg.messageTimestamp * 1000
 
         return sock.sendMessage(from, {
             text: `🏓 Pong!\n⚡ Speed: ${ping}ms`
         })
     }
 
-    if (command === "settings") {
-
-    const isGroup = from.endsWith("@g.us")
-
-    const welcomeStatus = isGroup
-        ? (settings?.welcome?.[from] ? "ON" : "OFF")
-        : "GROUP ONLY"
-
-    const antilinkStatus = isGroup
-        ? (settings?.antilink?.[from] ? "ON" : "OFF")
-        : "GROUP ONLY"
-
-    return sock.sendMessage(from, {
-        text: `
-⚙️ BOT SETTINGS
-
-🔹 Prefix: ${PREFIX}
-🔹 Mode: ${mode}
-🔹 Owner: +260772697513
-🔹 Version: ${BOT_VERSION}
-
-👥 GROUP SETTINGS
-👋 Welcome: ${welcomeStatus}
-🔗 Antilink: ${antilinkStatus}
-
-🧩 COMMANDS:
-.setprefix <symbol>
-.mode public/private/self
-.welcome on/off
-.antilink on/off
-.demote - Remove admin 👮
-
-> SAT Limited
-        `
-    })
-}
-    
+    // ===============================
+    // ✅ ALIVE
+    // ===============================
     if (command === "alive") {
 
         return sock.sendMessage(from, {
-            text: "✅ Charly MD Bot is running 🚀"
+            text:
+`✅ CHARLY MD BOT ONLINE
+
+⚡ Version: ${BOT_VERSION}
+⏱️ Uptime: ${getUptime()}`
         })
     }
 
     // ===============================
-    // 📜 MENU COMMAND
+    // ⚙️ SETTINGS
     // ===============================
+    if (command === "settings") {
 
+        return sock.sendMessage(from, {
+            text:
+`⚙️ BOT SETTINGS
+
+🔹 Prefix: ${PREFIX}
+🔹 Mode: ${mode}
+🔹 Version: ${BOT_VERSION}
+🔹 Owner: +${ownerNumber}`
+        })
+    }
+
+    // ===============================
+    // 📜 MENU
+    // ===============================
     if (command === "menu") {
 
         return sock.sendMessage(from, {
-            image: { url: BOT_IMAGE },
+            image: {
+                url: BOT_IMAGE
+            },
 
-            caption: `
-╭━━━〔 🤖 CHARLY MD BOT 〕━━━╮
-┃ 👑 Owner: SAT Limited Developers
-┃ ⚙️ Prefix: (.)
-┃ 📡 Status: Online 🚀
+            caption:
+`╭━━━〔 🤖 CHARLY MD BOT 〕━━━╮
+┃ 👑 Owner: SAT Limited
+┃ ⚙️ Prefix: ${PREFIX}
 ┃ 🔐 Mode: ${mode}
 ┃ ⏱️ Uptime: ${getUptime()}
-┃ 🧩 Version: ${BOT_VERSION}
+┃ 🚀 Version: ${BOT_VERSION}
 ╰━━━━━━━━━━━━━━━━━━━━━━╯
 
-┌──⭓『 ⚡ MAIN COMMANDS 』
-│ .ping - Check bot speed
-│ .alive - Check bot status
-│ .menu - Show full menu
-│ .gpt - AI chatbot 🤖
-│ .pair - Link WhatsApp bot
-│ .settings
-└───────⭓
+⚡ MAIN
+.ping
+.alive
+.menu
+.settings
 
-┌──⭓『 🧠 AI SYSTEM 』
-│ .gpt <text> - Ask AI anything
-│ .lyrics 
-└───────⭓
+🧠 AI
+.gpt
+.ai
 
-┌──⭓『 🎮 GAMES 』
-│ .guess - Number guessing game
-│ .trivia - Trivia questions
-│ .answer - Answer trivia
-└───────⭓
+🎮 GAMES
+.guess
+.trivia
+.answer
 
-┌──⭓『 🔊 MEDIA 』
-│ .play <name> - Play music 🎵
-│ .ytmp4 <link> - Download video 🎥
-│ .tts <text> - Text to speech 🔊
-│ .vv - View once media
-└───────⭓
+🎵 MEDIA
+.play
+.ytmp4
+.tts
+.vv
 
-┌──⭓『 🖼️ STICKERS & FUN 』
-│ .sticker - Convert image to sticker
-│ .meme - Random meme 😂
-│ .joke - Random joke
-└───────⭓
+👮 GROUP
+.kick
+.promote
+.warn
+.demote
+.antilink
+.add
 
-┌──⭓『 👮 GROUP COMMANDS 』
-│ .kick - Remove user
-│ .promote - Promote user
-│ .warn - Warn user
-│ .antilink on/off - Block links 🔗
-│ .add <phone number>
-│ .welcome on/off
-│ .demote - Remove admin 👮
-└───────⭓
+👑 OWNER
+.mode
+.setprefix
+.update
+.owner
+.channel
 
-┌──⭓『 🔐 OWNER COMMANDS 』
-│ .owner - Bot owner info 👑
-│ .update - Bot update status
-│ .mode public/private/self
-│ .channel
-│ .setprefix
-└───────⭓
-
-📢 OFFICIAL CHANNEL
-│ Join for updates & support
-
-📌 INFO
-│ Bot created by SAT Limited
-│ More updates coming soon 🚀
-╰━━━━━━━━━━━━━━━━━━━━━━╯
-            `,
+⚡ SAT Limited`,
 
             contextInfo: {
                 externalAdReply: {
-                    
                     sourceUrl:
                         "https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e",
                     mediaType: 1,
@@ -233,22 +236,14 @@ module.exports = async (ctx) => {
     }
 
     // ===============================
-    // 😂 FUN COMMANDS
+    // 😂 JOKE
     // ===============================
-
     if (command === "joke") {
 
         const jokes = [
-            "😂 Why did the developer go broke? Because he used up all his cache.",
-            "🤣 Why do programmers prefer dark mode? Because light attracts bugs.",
-            "😆 Why did JavaScript break up with HTML? It found someone more responsive.",
-            "😂 Why did the computer get cold? It forgot to close its Windows.",
-            "🤣 Why do coders hate nature? Too many bugs.",
-            "😆 Why did the function return early? Because it had a date!",
-            "😂 Why did the dev sleep well? Because he debugged everything.",
-            "🤣 Why was the JavaScript file sad? Because it didn’t know how to null its feelings.",
-            "😆 Why did the programmer quit his job? No arrays (a raise).",
-            "😂 Why do programmers drink coffee? To turn code into reality."
+            "😂 Why do programmers hate bugs? Because they prefer features.",
+            "🤣 Why did the developer go broke? Too many cache misses.",
+            "😆 Why do coders love dark mode? Light attracts bugs."
         ]
 
         const random =
@@ -260,179 +255,193 @@ module.exports = async (ctx) => {
     }
 
     // ===============================
-    // 🔊 MEDIA COMMANDS
+    // 🔊 TTS
     // ===============================
+    if (command === "tts") {
 
-    const { downloadContentFromMessage } = require("@whiskeysockets/baileys")
+        const textToSpeak = args.join(" ").trim()
 
+        if (!textToSpeak) {
+            return sock.sendMessage(from, {
+                text: "❌ Give text"
+            })
+        }
+
+        const fileName =
+            `./temp/${Date.now()}.mp3`
+
+        try {
+
+            const gtts = new gTTS(textToSpeak, "en")
+
+            gtts.save(fileName, async () => {
+
+                try {
+
+                    await sock.sendMessage(from, {
+                        audio: {
+                            url: fileName
+                        },
+                        mimetype: "audio/mpeg"
+                    }, { quoted: msg })
+
+                } catch (e) {
+                    console.log("TTS send error:", e)
+                }
+
+                safeDelete(fileName)
+            })
+
+        } catch (e) {
+
+            console.log("TTS error:", e)
+
+            return sock.sendMessage(from, {
+                text: "❌ Failed to generate TTS"
+            })
+        }
+    }
+
+    // ===============================
+    // 👁️ VIEW ONCE
+    // ===============================
     if (command === "vv") {
-        const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage
-        
+
+        const quoted =
+            msg.message?.extendedTextMessage?.contextInfo?.quotedMessage
+
         if (!quoted) {
-            return sock.sendMessage(from, { 
-                text: "❌ Reply to a view-once image or video!\n\n*Usage:* Reply .vv to view-once" 
+            return sock.sendMessage(from, {
+                text: "❌ Reply to a view-once message"
             }, { quoted: msg })
         }
 
         try {
-            // Handle all WhatsApp view-once versions
-            const viewOnceMsg = 
+
+            const viewOnceMsg =
                 quoted.viewOnceMessage?.message ||
                 quoted.viewOnceMessageV2?.message ||
                 quoted.viewOnceMessageV2Extension?.message
 
             if (!viewOnceMsg) {
-                return sock.sendMessage(from, { 
-                    text: "❌ That's not a view-once message!" 
+                return sock.sendMessage(from, {
+                    text: "❌ Not a view-once message"
                 }, { quoted: msg })
             }
 
-            const mediaType = viewOnceMsg.imageMessage ? "image" : viewOnceMsg.videoMessage ? "video" : null
-            
+            const mediaType =
+                viewOnceMsg.imageMessage
+                    ? "image"
+                    : viewOnceMsg.videoMessage
+                    ? "video"
+                    : null
+
             if (!mediaType) {
-                return sock.sendMessage(from, { 
-                    text: "❌ Only works on view-once images/videos!" 
+                return sock.sendMessage(from, {
+                    text: "❌ Unsupported media"
                 }, { quoted: msg })
             }
 
-            const mediaMsg = viewOnceMsg.imageMessage || viewOnceMsg.videoMessage
-            
-            const stream = await downloadContentFromMessage(mediaMsg, mediaType)
+            const mediaMsg =
+                viewOnceMsg.imageMessage ||
+                viewOnceMsg.videoMessage
+
+            if (
+                mediaMsg.fileLength >
+                50 * 1024 * 1024
+            ) {
+                return sock.sendMessage(from, {
+                    text: "❌ File too large"
+                }, { quoted: msg })
+            }
+
+            const stream = await downloadContentFromMessage(
+                mediaMsg,
+                mediaType
+            )
+
             let buffer = Buffer.from([])
+
             for await (const chunk of stream) {
                 buffer = Buffer.concat([buffer, chunk])
             }
 
-            if (buffer.length === 0) throw new Error("Empty buffer")
-
             if (mediaType === "image") {
+
                 await sock.sendMessage(from, {
                     image: buffer,
-                    caption: `✅ *View-Once Saved*\n⚡ SAT Limited`
+                    caption: "✅ View-once saved"
                 }, { quoted: msg })
+
             } else {
+
                 await sock.sendMessage(from, {
                     video: buffer,
-                    caption: `✅ *View-Once Saved*\n⚡ SAT Limited`
+                    caption: "✅ View-once saved"
                 }, { quoted: msg })
             }
 
         } catch (e) {
-            console.error("VV error:", e.message)
-            await sock.sendMessage(from, { 
-                text: "❌ Failed to save!\n*Reason:* Already opened or expired" 
+
+            console.log("VV error:", e)
+
+            return sock.sendMessage(from, {
+                text: "❌ Failed to save media"
             }, { quoted: msg })
         }
     }
-}
 
     // ===============================
-    // 🔊 TTS COMMAND
+    // 👮 DEMOTE
     // ===============================
+    if (command === "demote") {
 
-    if (command === "tts") {
-
-        const gTTS = require("gtts")
-
-        const textToSpeak = args.join(" ")
-
-        if (!textToSpeak) {
+        if (!from.endsWith("@g.us")) {
             return sock.sendMessage(from, {
-                text: "❌ Give text!"
+                text: "❌ Group only command"
             })
         }
 
-        const gtts = new gTTS(textToSpeak, "en")
+        const metadata = await sock.groupMetadata(from)
 
-        gtts.save("tts.mp3", async () => {
+        const senderAdmin = metadata.participants.find(
+            p => p.id === sender
+        )?.admin
 
-            await sock.sendMessage(from, {
-                audio: fs.readFileSync("tts.mp3"),
-                mimetype: "audio/mp4"
+        if (!senderAdmin) {
+            return sock.sendMessage(from, {
+                text: "❌ Admin only"
             })
-        })
-    }
+        }
 
-    // ===============================
-    // 👮 GROUP COMMANDS
-    // ===============================
+        const mentioned =
+            msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || []
 
-    if (command === "demote") {
-
-    if (!from.endsWith("@g.us")) {
-        return sock.sendMessage(from, {
-            text: "❌ This command only works in groups!"
-        })
-    }
-
-    const metadata = await sock.groupMetadata(from)
-
-    const botId = sock.user.id
-    const botAdmin = metadata.participants.find(p =>
-        p.id === botId && (p.admin === "admin" || p.admin === "superadmin")
-    )
-
-    if (!botAdmin) {
-        return sock.sendMessage(from, {
-            text: "❌ I must be admin to use this command."
-        })
-    }
-
-    const senderAdmin = metadata.participants.find(p =>
-        p.id === sender && (p.admin === "admin" || p.admin === "superadmin")
-    )
-
-    if (!senderAdmin) {
-        return sock.sendMessage(from, {
-            text: "❌ Only group admins can use this command."
-        })
-    }
-
-    const user =
-        ctx.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] ||
-        ctx.message?.extendedTextMessage?.contextInfo?.participant
-
-    if (!user) {
-        return sock.sendMessage(from, {
-            text: "❌ Reply to or mention an admin to demote."
-        })
-    }
-
-    const target = metadata.participants.find(p => p.id === user)
-
-    if (!target || (target.admin !== "admin" && target.admin !== "superadmin")) {
-        return sock.sendMessage(from, {
-            text: "❌ That user is not an admin."
-        })
-    }
-
-    try {
+        if (!mentioned.length) {
+            return sock.sendMessage(from, {
+                text: "❌ Mention a user"
+            })
+        }
 
         await sock.groupParticipantsUpdate(
             from,
-            [user],
+            mentioned,
             "demote"
         )
 
-        await sock.sendMessage(from, {
-            text: `✅ Successfully demoted @${user.split("@")[0]}`,
-            mentions: [user]
-        })
-
-    } catch (err) {
-        console.log(err)
-
         return sock.sendMessage(from, {
-            text: "❌ Failed to demote user."
+            text: "✅ User demoted"
         })
     }
-}
 
+    // ===============================
+    // ➕ ADD USER
+    // ===============================
     if (command === "add") {
 
         if (!from.endsWith("@g.us")) {
             return sock.sendMessage(from, {
-                text: "❌ This command only works in groups!"
+                text: "❌ Group only command"
             })
         }
 
@@ -440,13 +449,13 @@ module.exports = async (ctx) => {
 
         if (!number) {
             return sock.sendMessage(from, {
-                text: "❌ Usage:\n.add 2607xxxxxxx"
+                text: "❌ Usage: .add 2607xxxxxxx"
             })
         }
 
-        const jid = number + "@s.whatsapp.net"
-
         try {
+
+            const jid = number + "@s.whatsapp.net"
 
             await sock.groupParticipantsUpdate(
                 from,
@@ -455,123 +464,89 @@ module.exports = async (ctx) => {
             )
 
             return sock.sendMessage(from, {
-                text:
-                    `✅ Successfully added ${number} to the group`
+                text: `✅ Added ${number}`
             })
 
-        } catch (err) {
+        } catch (e) {
+
+            console.log("Add error:", e)
 
             return sock.sendMessage(from, {
-                text:
-                    "❌ Failed to add user.\nMake sure:\n- Bot is admin\n- Number is correct"
+                text: "❌ Failed to add user"
             })
         }
     }
 
     // ===============================
-    // 👑 OWNER COMMANDS
+    // 👑 OWNER
     // ===============================
-
     if (command === "owner") {
 
-        const message = `
-╭━━━〔 👑 OWNER INFO 〕━━━╮
-┃ 🤖 Bot: Charly MD
-┃ 👤 Owner: Simbarashe Tembo .A.
-┃ 📞 +260772697513
-┃ ⚡ SAT Limited
-╰━━━━━━━━━━━━━━━━━━╯
-        `.trim()
-
         return sock.sendMessage(from, {
-            text: message
+            text:
+`👑 OWNER INFO
+
+👤 Simbarashe Tembo
+📞 +${ownerNumber}
+⚡ SAT Limited`
         })
     }
 
-    const fs = require("fs")
-const { exec } = require("child_process")
+    // ===============================
+    // 📢 CHANNEL
+    // ===============================
+    if (command === "channel") {
 
-if (command === "update") {
-
-    if (!isOwner(sender)) {
         return sock.sendMessage(from, {
-            text: "❌ Owner only."
+            text:
+`📢 OFFICIAL CHANNEL
+
+https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e`
         })
     }
 
-    await sock.sendMessage(from, {
-        text: "🔄 Updating CHARLY MD from GitHub..."
-    })
+    // ===============================
+    // ⚙️ SET PREFIX
+    // ===============================
+    if (command === "setprefix") {
 
-    exec("git pull", async (err, stdout, stderr) => {
-
-        if (err) {
-
-            console.log(err)
-
+        if (!isOwner(sender)) {
             return sock.sendMessage(from, {
-                text: `❌ Update failed:\n${err.message}`
+                text: "❌ Owner only"
             })
         }
 
-        if (stderr) {
-            console.log(stderr)
+        const newPrefix = args[0]
+
+        if (!newPrefix) {
+            return sock.sendMessage(from, {
+                text:
+`⚙️ Current prefix: ${PREFIX}`
+            })
         }
 
-        await sock.sendMessage(from, {
-            text:
-                `✅ Updated successfully!\n\n` +
-                `${stdout}\n` +
-                `♻️ Restarting bot in 3 seconds...`
-        })
+        PREFIX = newPrefix
 
-        setTimeout(() => {
-            process.exit(0)
-        }, 3000)
-    })
-}
+        settings.prefix = PREFIX
 
-    if (command === "channel") {
+        fs.writeFileSync(
+            "./database/settings.json",
+            JSON.stringify(settings, null, 2)
+        )
 
-    return sock.sendMessage(from, {
-        text: `
-📢 OFFICIAL CHANNEL
-
-https://whatsapp.com/channel/0029VbCHC3dIt5s59dq0u92e
-
-👑 SAT Limited Updates
-        `
-    })
-}
-
-if (command === "setprefix") {
-
-    if (!isOwner(sender)) {
         return sock.sendMessage(from, {
-            text: "❌ Owner only command."
+            text: `✅ Prefix changed to ${PREFIX}`
         })
     }
 
-    const newPrefix = args[0]
-
-    if (!newPrefix) {
-        return sock.sendMessage(from, {
-            text: `⚙️ Current prefix: ${PREFIX}\n\nUsage:\n.setprefix !`
-        })
-    }
-
-    PREFIX = newPrefix
-
-    return sock.sendMessage(from, {
-        text: `✅ Prefix changed successfully!\n\nNew prefix: ${PREFIX}`
-    })
-}
-
+    // ===============================
+    // 🔐 MODE
+    // ===============================
     if (command === "mode") {
 
         if (!isOwner(sender)) {
             return sock.sendMessage(from, {
-                text: "❌ Owner only command."
+                text: "❌ Owner only"
             })
         }
 
@@ -580,14 +555,21 @@ if (command === "setprefix") {
         if (!newMode) {
             return sock.sendMessage(from, {
                 text:
-                    `📌 Current mode: *${mode}*\n\n` +
-                    `Use:\n.mode public\n.mode private\n.mode self`
+`📌 Current mode: ${mode}
+
+Use:
+.mode public
+.mode private
+.mode self`
             })
         }
 
-        if (!["public", "private", "self"].includes(newMode)) {
+        if (
+            !["public", "private", "self"]
+                .includes(newMode)
+        ) {
             return sock.sendMessage(from, {
-                text: "❌ Use: public, private, self"
+                text: "❌ Invalid mode"
             })
         }
 
@@ -599,8 +581,45 @@ if (command === "setprefix") {
         )
 
         return sock.sendMessage(from, {
-            text: `✅ Mode changed to: ${newMode}`
+            text: `✅ Mode changed to ${mode}`
         })
     }
 
+    // ===============================
+    // 🔄 UPDATE
+    // ===============================
+    if (command === "update") {
+
+        if (!isOwner(sender)) {
+            return sock.sendMessage(from, {
+                text: "❌ Owner only"
+            })
+        }
+
+        await sock.sendMessage(from, {
+            text: "🔄 Updating from GitHub..."
+        })
+
+        exec("git pull", async (err, stdout) => {
+
+            if (err) {
+                return sock.sendMessage(from, {
+                    text: `❌ Update failed\n${err.message}`
+                })
+            }
+
+            await sock.sendMessage(from, {
+                text:
+`✅ Updated successfully
+
+${stdout}
+
+♻️ Restarting...`
+            })
+
+            setTimeout(() => {
+                process.exit(0)
+            }, 3000)
+        })
+    }
 }
