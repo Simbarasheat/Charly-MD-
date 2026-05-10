@@ -1,51 +1,175 @@
-let games = {}
+// =======================
+// 🎮 GAME STORAGE
+// =======================
+const guessGames = {}
+const triviaGames = {}
 
+// =======================
+// ⏱️ AUTO CLEANUP
+// =======================
+setInterval(() => {
+
+    const now = Date.now()
+
+    // Guess cleanup
+    for (const id in guessGames) {
+        if (now > guessGames[id].expires) {
+            delete guessGames[id]
+        }
+    }
+
+    // Trivia cleanup
+    for (const id in triviaGames) {
+        if (now > triviaGames[id].expires) {
+            delete triviaGames[id]
+        }
+    }
+
+}, 60000)
+
+// =======================
+// 🤖 MODULE
+// =======================
 module.exports = async (ctx) => {
-    const { sock, from, command, args } = ctx
 
-    // GUESS GAME
+    const {
+        sock,
+        from,
+        command,
+        args = [],
+        sender
+    } = ctx
+
+    // Unique game ID per chat + user
+    const gameId = `${from}_${sender}`
+
+    // =======================
+    // 🎯 GUESS GAME
+    // =======================
     if (command === "guess") {
-        if (!games[from]) {
-            const number = Math.floor(Math.random() * 10) + 1
-            games[from] = number
+
+        // Start new game
+        if (!guessGames[gameId]) {
+
+            const number =
+                Math.floor(Math.random() * 10) + 1
+
+            guessGames[gameId] = {
+                answer: number,
+                expires: Date.now() + 300000 // 5 mins
+            }
 
             return sock.sendMessage(from, {
-                text: "🎯 Guess a number between 1-10"
-            })
-        } else {
-            const guess = parseInt(args[1])
+                text:
+`🎯 Guess a number between 1 and 10
 
-            if (guess === games[from]) {
-                delete games[from]
-                return sock.sendMessage(from, { text: "🎉 Correct!" })
-            } else {
-                return sock.sendMessage(from, { text: "❌ Wrong, try again" })
-            }
+Example:
+.guess 5`
+            })
         }
+
+        // Player guessing
+        const guess = parseInt(args[0])
+
+        if (isNaN(guess)) {
+            return sock.sendMessage(from, {
+                text: "❌ Enter a valid number"
+            })
+        }
+
+        const answer = guessGames[gameId].answer
+
+        if (guess === answer) {
+
+            delete guessGames[gameId]
+
+            return sock.sendMessage(from, {
+                text: "🎉 Correct answer!"
+            })
+        }
+
+        return sock.sendMessage(from, {
+            text: "❌ Wrong guess, try again"
+        })
     }
 
-    // TRIVIA
+    // =======================
+    // 🧠 TRIVIA
+    // =======================
     if (command === "trivia") {
+
         const questions = [
-            { q: "Capital of Zambia?", a: "lusaka" },
-            { q: "2+2?", a: "4" }
+            {
+                q: "Capital city of Zambia?",
+                a: "lusaka"
+            },
+            {
+                q: "2 + 2 = ?",
+                a: "4"
+            },
+            {
+                q: "Largest planet?",
+                a: "jupiter"
+            },
+            {
+                q: "Water chemical formula?",
+                a: "h2o"
+            }
         ]
 
-        const q = questions[Math.floor(Math.random() * questions.length)]
+        const random =
+            questions[Math.floor(Math.random() * questions.length)]
 
-        games[from] = q.a
+        triviaGames[gameId] = {
+            answer: random.a,
+            expires: Date.now() + 300000
+        }
 
-        sock.sendMessage(from, { text: `🧠 ${q.q}` })
+        return sock.sendMessage(from, {
+            text:
+`🧠 TRIVIA
+
+${random.q}
+
+Reply using:
+.answer your_answer`
+        })
     }
 
+    // =======================
+    // ✅ ANSWER
+    // =======================
     if (command === "answer") {
-        const ans = args[1]?.toLowerCase()
 
-        if (ans === games[from]) {
-            delete games[from]
-            sock.sendMessage(from, { text: "✅ Correct!" })
-        } else {
-            sock.sendMessage(from, { text: "❌ Wrong!" })
+        if (!triviaGames[gameId]) {
+            return sock.sendMessage(from, {
+                text: "❌ No active trivia game"
+            })
         }
+
+        const ans =
+            args.join(" ").trim().toLowerCase()
+
+        if (!ans) {
+            return sock.sendMessage(from, {
+                text: "❌ Give an answer"
+            })
+        }
+
+        const correct =
+            triviaGames[gameId].answer
+
+        if (ans === correct) {
+
+            delete triviaGames[gameId]
+
+            return sock.sendMessage(from, {
+                text: "✅ Correct answer!"
+            })
+        }
+
+        return sock.sendMessage(from, {
+            text: "❌ Wrong answer"
+        })
     }
 }
