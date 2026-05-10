@@ -265,9 +265,6 @@ module.exports = async (ctx) => {
 
     const { downloadContentFromMessage } = require("@whiskeysockets/baileys")
 
-module.exports = async (ctx) => {
-    const { sock, from, command, msg } = ctx
-
     if (command === "vv") {
         const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage
         
