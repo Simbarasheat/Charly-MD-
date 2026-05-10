@@ -39,6 +39,7 @@ let retryCount = 0
 const MAX_RETRIES = 5
 let sock = null
 let latestQR = null
+let startupSent = false
 
 async function startBot() {
 if (isStarting) return
@@ -71,7 +72,11 @@ sock.ev.on("connection.update", async (update) => {
     console.log("✅ Bot connected to WhatsApp!")
 
     latestQR = null
+    
     retryCount = 0
+
+    if (startupSent) return
+    startupSent = true
 
     const deployer = sock.user?.id?.split(":")[0]
 
