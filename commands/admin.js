@@ -1,91 +1,179 @@
 const fs = require("fs")
+const path = require("path")
 
-// LOAD DATABASE
+// =======================
+// 📁 SAFE DATABASE SETUP
+// =======================
+const dbPath = "./database"
+
+if (!fs.existsSync(dbPath)) {
+    fs.mkdirSync(dbPath)
+}
+
+const warnFile = path.join(dbPath, "warnings.json")
+const antiFile = path.join(dbPath, "antilink.json")
+
 let warnings = {}
 let antiLink = {}
 
-if (fs.existsSync("./database/warnings.json")) {
-    warnings = JSON.parse(fs.readFileSync("./database/warnings.json"))
+// SAFE LOAD
+try {
+    if (fs.existsSync(warnFile)) {
+        warnings = JSON.parse(fs.readFileSync(warnFile))
+    }
+} catch (e) {
+    warnings = {}
 }
 
-if (fs.existsSync("./database/antilink.json")) {
-    antiLink = JSON.parse(fs.readFileSync("./database/antilink.json"))
+try {
+    if (fs.existsSync(antiFile)) {
+        antiLink = JSON.parse(fs.readFileSync(antiFile))
+    }
+} catch (e) {
+    antiLink = {}
 }
 
+// =======================
+// 💾 SAFE SAVE FUNCTION
+// =======================
+const saveJSON = (file, data) => {
+    fs.writeFileSync(file, JSON.stringify(data, null, 2))
+}
+
+// =======================
+// 🤖 MODULE
+// =======================
 module.exports = async (ctx) => {
     const {
-        sock, from, msg, command, isAdmin,
-        isBotAdmin, isGroup, sender
+        sock,
+        from,
+        msg,
+        command,
+        isAdmin,
+        isBotAdmin,
+        isGroup,
+        sender,
+        args = [],
+        text
     } = ctx
 
-    // WARN
-    if (command === "warn") {
-        if (!isAdmin) return sock.sendMessage(from, { text: "❌ Admin only!" })
+    // =======================
+    // ⚠️ GET MENTIONS SAFELY
+    // =======================
+    const mentioned =
+        msg?.message?.extendedTextMessage?.contextInfo?.mentionedJid || []
 
-        const mentioned = msg.message.extendedTextMessage?.contextInfo?.mentionedJid
-        if (!mentioned) return sock.sendMessage(from, { text: "❌ Tag user!" })
+    // =======================
+    // ⚠️ WARN SYSTEM
+    // =======================
+    if (command === "warn") {
+        if (!isAdmin) {
+            return sock.sendMessage(from, { text: "❌ Admin only!" })
+        }
+
+        if (!mentioned.length) {
+            return sock.sendMessage(from, { text: "❌ Tag a user!" })
+        }
 
         const user = mentioned[0]
 
-        if (!warnings[user]) warnings[user] = 0
-        warnings[user]++
-
-        fs.writeFileSync("./database/warnings.json", JSON.stringify(warnings))
+        warnings[user] = (warnings[user] || 0) + 1
+        saveJSON(warnFile, warnings)
 
         if (warnings[user] >= 3) {
-            await sock.groupParticipantsUpdate(from, [user], "remove")
-            delete warnings[user]
-            fs.writeFileSync("./database/warnings.json", JSON.stringify(warnings))
+            if (isBotAdmin) {
+                await sock.groupParticipantsUpdate(from, [user], "remove")
+            }
 
-            return sock.sendMessage(from, { text: "🚫 User kicked!" })
+            delete warnings[user]
+            saveJSON(warnFile, warnings)
+
+            return sock.sendMessage(from, {
+                text: "🚫 User removed after 3 warnings"
+            })
         }
 
-        sock.sendMessage(from, { text: `⚠️ Warning ${warnings[user]}/3` })
+        return sock.sendMessage(from, {
+            text: `⚠️ Warning ${warnings[user]}/3`
+        })
     }
 
-    // ANTILINK TOGGLE
+    // =======================
+    // 🔗 ANTILINK TOGGLE
+    // =======================
     if (command === "antilink") {
-        if (!isAdmin) return sock.sendMessage(from, { text: "❌ Admin only!" })
+        if (!isAdmin) {
+            return sock.sendMessage(from, { text: "❌ Admin only!" })
+        }
 
-        const option = ctx.args[1]
+        const option = args[0]
 
-        if (option === "on") antiLink[from] = true
-        else if (option === "off") antiLink[from] = false
-        else return sock.sendMessage(from, { text: "Use: .antilink on/off" })
+        if (!option || !["on", "off"].includes(option)) {
+            return sock.sendMessage(from, {
+                text: "Use: .antilink on/off"
+            })
+        }
 
-        fs.writeFileSync("./database/antilink.json", JSON.stringify(antiLink))
+        antiLink[from] = option === "on"
+        saveJSON(antiFile, antiLink)
 
-        sock.sendMessage(from, { text: `🔗 Anti-link ${option}` })
+        return sock.sendMessage(from, {
+            text: `🔗 Anti-link ${option.toUpperCase()}`
+        })
     }
 
-    // AUTO ANTILINK
+    // =======================
+    // 🚨 AUTO ANTILINK
+    // =======================
     if (isGroup && antiLink[from]) {
-        if (ctx.text.includes("chat.whatsapp.com")) {
-            if (!isAdmin && isBotAdmin) {
+        const messageText = text || ""
+
+        const hasLink = messageText.includes("chat.whatsapp.com")
+
+        if (hasLink && !isAdmin && isBotAdmin) {
+            try {
                 await sock.groupParticipantsUpdate(from, [sender], "remove")
+            } catch (e) {
+                console.log("Anti-link remove failed:", e)
             }
         }
     }
 
-    // PROMOTE
+    // =======================
+    // ⬆️ PROMOTE
+    // =======================
     if (command === "promote") {
-        if (!isAdmin || !isBotAdmin) return
+        if (!isAdmin || !isBotAdmin) {
+            return sock.sendMessage(from, { text: "❌ No permission!" })
+        }
 
-        const mentioned = msg.message.extendedTextMessage?.contextInfo?.mentionedJid
-        if (!mentioned) return
+        if (!mentioned.length) {
+            return sock.sendMessage(from, { text: "❌ Tag user!" })
+        }
 
         await sock.groupParticipantsUpdate(from, mentioned, "promote")
-        sock.sendMessage(from, { text: "✅ Promoted!" })
+
+        return sock.sendMessage(from, {
+            text: "✅ User promoted"
+        })
     }
 
-    // KICK
+    // =======================
+    // ⬇️ DEMOTE/KICK
+    // =======================
     if (command === "kick") {
-        if (!isAdmin || !isBotAdmin) return
+        if (!isAdmin || !isBotAdmin) {
+            return sock.sendMessage(from, { text: "❌ No permission!" })
+        }
 
-        const mentioned = msg.message.extendedTextMessage?.contextInfo?.mentionedJid
-        if (!mentioned) return
+        if (!mentioned.length) {
+            return sock.sendMessage(from, { text: "❌ Tag user!" })
+        }
 
         await sock.groupParticipantsUpdate(from, mentioned, "remove")
-        sock.sendMessage(from, { text: "🚫 Removed!" })
+
+        return sock.sendMessage(from, {
+            text: "🚫 User removed"
+        })
     }
 }
