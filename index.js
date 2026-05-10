@@ -146,6 +146,19 @@ Type .menu for commands
 })
 
 // 💬 MESSAGE HANDLER
+const cooldowns = new Map()
+const now = Date.now()
+
+if (cooldowns.has(sender)) {
+    const expiration = cooldowns.get(sender)
+
+    if (now < expiration) {
+        return
+    }
+}
+
+cooldowns.set(sender, now + 5000)
+
 sock.ev.on("messages.upsert", async ({ messages }) => {
     try {
         const msg = messages[0]
