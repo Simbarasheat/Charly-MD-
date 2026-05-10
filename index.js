@@ -172,8 +172,10 @@ sock.ev.on("messages.upsert", async ({ messages }) => {
             : false
 
         const isBotAdmin = isGroup
-            ? participants.find(p => p.id === sock.user.id)?.admin !== null
-            : false
+    ? participants.find(p =>
+        p.id.includes(sock.user.id.split(":")[0])
+      )?.admin !== null
+    : false
 
         const context = {
             sock,
