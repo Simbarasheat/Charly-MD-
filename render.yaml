@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: charly-md
+    runtime: node
+    plan: free
+
+    buildCommand: |
+      npm install
+
+    startCommand: |
+      node index.js
+
+    autoDeploy: true
+
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+
+      - key: NODE_ENV
+        value: production
+
+      - key: PORT
+        value: 3000
+
+      - key: OPENAI_API_KEY
+        sync: false
+
+    healthCheckPath: /api/status
