@@ -23,6 +23,7 @@ res.sendFile(path.join(__dirname, "public/index.html"))
 const makeWASocket = require("@whiskeysockets/baileys").default
 const { useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys")
 const QRCode = require("qrcode")
+const BOT_IMAGE = "https://files.catbox.moe/37ds7j.png"
 
 // COMMANDS
 const general = require("./commands/general")
