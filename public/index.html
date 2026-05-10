@@ -1,149 +1,408 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Charly MD V2 - Pairing Panel</title>  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', sans-serif;
-    }
 
-    body {
-      background: linear-gradient(135deg, #dff5f2, #c8ebe6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
+<meta charset="UTF-8" />
 
-    .card {
-      background: #fff;
-      padding: 25px;
-      border-radius: 20px;
-      width: 95%;
-      max-width: 400px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      text-align: center;
-    }
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+/>
 
-    .title {
-      font-size: 22px;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
+<title>Charly MD V2</title>
 
-    .subtitle {
-      color: #666;
-      margin-bottom: 20px;
-    }
+<style>
 
-    input {
-      width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      margin-bottom: 10px;
-      font-size: 16px;
-    }
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
 
-    button {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      background: #1abc9c;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
+body{
 
-    button:hover {
-      background: #16a085;
-    }
+    background:
+    linear-gradient(
+        135deg,
+        #dff5f2,
+        #c8ebe6
+    );
 
-    .warning {
-      font-size: 12px;
-      color: #e67e22;
-      margin-bottom: 15px;
-    }
+    min-height:100vh;
 
-    .result {
-      margin-top: 15px;
-      font-weight: bold;
-      font-size: 18px;
-    }
+    display:flex;
+    justify-content:center;
+    align-items:center;
 
-    .error {
-      color: red;
-      margin-top: 10px;
-    }
+    padding:20px;
+}
 
-    .footer {
-      margin-top: 20px;
-      font-size: 12px;
-      color: #888;
-    }
-  </style></head>
-<body>  <div class="card">
-    <div class="title">Charly MD V2</div>
-    <div class="subtitle">WhatsApp Bot Pairing Panel</div><input type="text" id="phone" placeholder="260XXXXXXXXX" />
+.card{
 
-<div class="warning">
-  ⚠ Enter full number with country code. No + or spaces.
+    background:#fff;
+
+    width:100%;
+    max-width:420px;
+
+    padding:28px;
+
+    border-radius:22px;
+
+    box-shadow:
+    0 10px 30px rgba(0,0,0,0.1);
+
+    text-align:center;
+}
+
+.logo{
+
+    font-size:26px;
+    font-weight:bold;
+    color:#1abc9c;
+
+    margin-bottom:8px;
+}
+
+.subtitle{
+
+    color:#666;
+    margin-bottom:22px;
+    font-size:14px;
+}
+
+input{
+
+    width:100%;
+
+    padding:14px;
+
+    border-radius:12px;
+
+    border:1px solid #ddd;
+
+    outline:none;
+
+    font-size:16px;
+
+    margin-bottom:12px;
+
+    transition:0.2s;
+}
+
+input:focus{
+
+    border-color:#1abc9c;
+}
+
+button{
+
+    width:100%;
+
+    padding:14px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#1abc9c;
+
+    color:white;
+
+    font-size:16px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:0.2s;
+}
+
+button:hover{
+
+    background:#16a085;
+}
+
+button:disabled{
+
+    background:#95a5a6;
+    cursor:not-allowed;
+}
+
+.warning{
+
+    font-size:12px;
+
+    color:#e67e22;
+
+    margin-bottom:16px;
+}
+
+.result{
+
+    margin-top:18px;
+
+    font-size:20px;
+
+    font-weight:bold;
+
+    color:#16a085;
+
+    word-break:break-word;
+}
+
+.error{
+
+    margin-top:14px;
+
+    color:red;
+
+    font-size:14px;
+}
+
+.loading{
+
+    margin-top:14px;
+
+    color:#3498db;
+
+    font-size:14px;
+}
+
+.footer{
+
+    margin-top:24px;
+
+    font-size:12px;
+
+    color:#888;
+}
+
+.code-box{
+
+    margin-top:18px;
+
+    background:#f4f4f4;
+
+    padding:14px;
+
+    border-radius:14px;
+
+    font-size:28px;
+
+    letter-spacing:3px;
+
+    font-weight:bold;
+
+    color:#2c3e50;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+    <div class="logo">
+        CHARLY MD V2
+    </div>
+
+    <div class="subtitle">
+        WhatsApp Bot Pairing Panel
+    </div>
+
+    <input
+        type="text"
+        id="phone"
+        placeholder="2607XXXXXXXX"
+        maxlength="15"
+    />
+
+    <div class="warning">
+        ⚠ Enter number with country code only.
+        <br>
+        Example: 2607XXXXXXXX
+    </div>
+
+    <button
+        id="pairBtn"
+        onclick="getCode()"
+    >
+        Get Pair Code
+    </button>
+
+    <div
+        class="loading"
+        id="loading"
+    ></div>
+
+    <div
+        class="result"
+        id="result"
+    ></div>
+
+    <div
+        class="error"
+        id="error"
+    ></div>
+
+    <div class="footer">
+        Powered by SAT Limited
+        <br>
+        Made by Simbarashe Tembo .A.
+    </div>
+
 </div>
 
-<button onclick="getCode()">Get Pair Code</button>
+<script>
 
-<div class="result" id="result"></div>
-<div class="error" id="error"></div>
+let cooldown = false
 
-<div class="footer">
-  Powered by SAT Limited
-  Made by Simbarashe Tembo .A.
-</div>
+async function getCode() {
 
-  </div>  <script>
-    async function getCode() {
-      const phone = document.getElementById("phone").value.trim();
-      const result = document.getElementById("result");
-      const error = document.getElementById("error");
+    if (cooldown) return
 
-      result.innerText = "";
-      error.innerText = "";
+    const phone =
+        document
+        .getElementById("phone")
+        .value
+        .trim()
 
-      if (!phone) {
-        error.innerText = "Enter a phone number.";
-        return;
-      }
+    const result =
+        document.getElementById("result")
 
-      try {
-        const res = await fetch("/api/pair-code", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ phone })
-        });
+    const error =
+        document.getElementById("error")
 
-        const data = await res.json();
+    const loading =
+        document.getElementById("loading")
+
+    const button =
+        document.getElementById("pairBtn")
+
+    result.innerHTML = ""
+    error.innerHTML = ""
+    loading.innerHTML = ""
+
+    // =======================
+    // 📱 VALIDATION
+    // =======================
+    if (!phone) {
+
+        error.innerHTML =
+            "❌ Enter phone number"
+
+        return
+    }
+
+    if (!/^[0-9]+$/.test(phone)) {
+
+        error.innerHTML =
+            "❌ Numbers only"
+
+        return
+    }
+
+    if (phone.length < 10) {
+
+        error.innerHTML =
+            "❌ Invalid phone number"
+
+        return
+    }
+
+    try {
+
+        cooldown = true
+
+        button.disabled = true
+
+        loading.innerHTML =
+            "🔄 Generating pairing code..."
+
+        // =======================
+        // 🌐 REQUEST
+        // =======================
+        const res = await fetch(
+            "/api/pair-code",
+            {
+                method:"POST",
+
+                headers:{
+                    "Content-Type":
+                    "application/json"
+                },
+
+                body:JSON.stringify({
+                    phone
+                })
+            }
+        )
+
+        const data = await res.json()
+
+        loading.innerHTML = ""
 
         if (!res.ok) {
-          throw new Error(data.error || "Failed to get code");
+
+            throw new Error(
+                data.error ||
+                "Failed to generate code"
+            )
         }
 
-        result.innerText = "Your Code: " + data.code;
-      } catch (err) {
-        console.error(err);
+        result.innerHTML =
 
-        if (err.message.includes("Unexpected token")) {
-          error.innerText = "Server returned HTML instead of JSON. Check backend route.";
+        `
+        <div class="code-box">
+            ${data.code}
+        </div>
+
+        <br>
+
+        📱 Open WhatsApp
+        <br>
+        Linked Devices
+        <br>
+        Link with phone number
+        `
+
+    } catch(err) {
+
+        console.log(err)
+
+        loading.innerHTML = ""
+
+        if (
+            err.message.includes(
+                "Unexpected token"
+            )
+        ) {
+
+            error.innerHTML =
+            "❌ Backend returned HTML instead of JSON"
+
         } else {
-          error.innerText = err.message;
+
+            error.innerHTML =
+                "❌ " + err.message
         }
-      }
+
+    } finally {
+
+        setTimeout(() => {
+
+            cooldown = false
+            button.disabled = false
+
+        }, 15000)
     }
-  </script></body>
+}
+
+</script>
+
+</body>
 </html>
