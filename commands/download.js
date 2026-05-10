@@ -5,193 +5,361 @@ const path = require("path")
 const lyricsFinder = require("lyrics-finder")
 const Genius = require("genius-lyrics-api")
 
+// =======================
+// 📁 TEMP FOLDER
+// =======================
+const TEMP_DIR = "./temp"
+
+if (!fs.existsSync(TEMP_DIR)) {
+    fs.mkdirSync(TEMP_DIR)
+}
+
+// =======================
+// 🧹 SAFE DELETE
+// =======================
+const safeDelete = (file) => {
+    try {
+        if (fs.existsSync(file)) {
+            fs.unlinkSync(file)
+        }
+    } catch (e) {
+        console.log("Delete error:", e)
+    }
+}
+
+// =======================
+// 🤖 MODULE
+// =======================
 module.exports = async (ctx) => {
-    const { sock, from, command, args, msg } = ctx
 
-    // Make sure temp folder exists
-    if (!fs.existsSync("./temp")) fs.mkdirSync("./temp")
+    const {
+        sock,
+        from,
+        command,
+        args = [],
+        msg
+    } = ctx
 
+    // =======================
     // 🎵 PLAY AUDIO
+    // =======================
     if (command === "play") {
-        const query = args.join(" ")
+
+        const query = args.join(" ").trim()
+
         if (!query) {
             return sock.sendMessage(from, {
-                text: "❌ Give song name!\nExample: .play calm down"
+                text:
+`❌ Give song name!
+
+Example:
+.play calm down`
             }, { quoted: msg })
         }
 
-        let replyMsg
+        let statusMsg
+
         try {
-            replyMsg = await sock.sendMessage(from, {
-                text: `🎶 Searching *${query}*...`
+
+            statusMsg = await sock.sendMessage(from, {
+                text: `🔍 Searching for "${query}"...`
             }, { quoted: msg })
 
             const search = await yts(query)
-            const video = search.videos[0]
+
+            const video = search?.videos?.[0]
+
             if (!video) {
-                await sock.sendMessage(from, { delete: replyMsg.key })
-                return sock.sendMessage(from, { text: "❌ No results found!" }, { quoted: msg })
+                return sock.sendMessage(from, {
+                    text: "❌ No results found"
+                }, { quoted: msg })
             }
 
-            await sock.sendMessage(from, {
-                edit: replyMsg.key,
-                text: `🎵 *${video.title}*\n⏳ Duration: ${video.timestamp}\n📥 Downloading audio...`
-            })
-
-            const stream = await play.stream(video.url, { quality: 2 }) 
-            const fileName = path.join("./temp", `${Date.now()}.mp3`)
-
-            const writeStream = fs.createWriteStream(fileName)
-            stream.stream.pipe(writeStream)
-
-            writeStream.on('finish', async () => {
-                await sock.sendMessage(from, {
-                    audio: { url: fileName },
-                    mimetype: "audio/mpeg",
-                    fileName: `${video.title}.mp3`
-                }, { quoted: msg })
-
-                await sock.sendMessage(from, {
-                    text: `✅ *${video.title}* sent\n\n💡 Get lyrics: .lyrics ${video.title}\n⚡ SAT Limited`
-                }, { quoted: msg })
-
-                fs.unlinkSync(fileName)
-                await sock.sendMessage(from, { delete: replyMsg.key })
-            })
-
-            writeStream.on('error', async (err) => {
-                console.error("Write error:", err)
-                await sock.sendMessage(from, { delete: replyMsg.key })
-                await sock.sendMessage(from, { text: "❌ Download failed" }, { quoted: msg })
-            })
-
-        } catch (e) {
-            console.error("Play error:", e)
-            if (replyMsg) await sock.sendMessage(from, { delete: replyMsg.key })
-            await sock.sendMessage(from, {
-                text: "❌ Error playing song\n*Reason:* YouTube blocked server or song restricted"
-            }, { quoted: msg })
-        }
-    }
-
-    // 🎥 YTMP4
-    if (command === "ytmp4") {
-        const url = args[0]
-        if (!url || !play.yt_validate(url)) {
-            return sock.sendMessage(from, {
-                text: "❌ Give valid YouTube link!\nExample: .ytmp4 https://youtube.com/..."
-            }, { quoted: msg })
-        }
-
-        let replyMsg
-        try {
-            replyMsg = await sock.sendMessage(from, {
-                text: "🎥 Fetching video info..."
-            }, { quoted: msg })
-
-            const videoInfo = await play.video_info(url)
-            if (videoInfo.video_details.durationInSec > 600) {
-                await sock.sendMessage(from, { delete: replyMsg.key })
-                return sock.sendMessage(from, { 
-                    text: "❌ Video too long! Max 10 minutes." 
+            // Prevent long downloads
+            if (video.seconds > 900) {
+                return sock.sendMessage(from, {
+                    text: "❌ Audio too long. Max 15 minutes."
                 }, { quoted: msg })
             }
 
             await sock.sendMessage(from, {
-                edit: replyMsg.key,
-                text: `🎥 *${videoInfo.video_details.title}*\n📥 Downloading 360p...`
+                text:
+`🎵 Downloading audio...
+
+📌 ${video.title}
+⏱️ ${video.timestamp}`
+            }, { quoted: msg })
+
+            const stream = await play.stream(video.url, {
+                quality: 2
             })
 
-            const stream = await play.stream(url, { quality: 18 }) // 360p
-            const fileName = path.join("./temp", `${Date.now()}.mp4`)
+            const fileName = path.join(
+                TEMP_DIR,
+                `${Date.now()}.mp3`
+            )
+
             const writeStream = fs.createWriteStream(fileName)
+
             stream.stream.pipe(writeStream)
 
-            writeStream.on('finish', async () => {
-                const stats = fs.statSync(fileName)
-                if (stats.size > 64 * 1024 * 1024) { // 64MB WhatsApp limit
-                    fs.unlinkSync(fileName)
-                    await sock.sendMessage(from, { delete: replyMsg.key })
-                    return sock.sendMessage(from, { 
-                        text: "❌ Video too large for WhatsApp. Try shorter video." 
+            writeStream.on("finish", async () => {
+
+                try {
+
+                    const stats = fs.statSync(fileName)
+
+                    // WhatsApp safety
+                    if (stats.size > 64 * 1024 * 1024) {
+                        safeDelete(fileName)
+
+                        return sock.sendMessage(from, {
+                            text: "❌ Audio too large for WhatsApp"
+                        }, { quoted: msg })
+                    }
+
+                    await sock.sendMessage(from, {
+                        audio: {
+                            url: fileName
+                        },
+                        mimetype: "audio/mpeg",
+                        fileName: `${video.title}.mp3`
+                    }, { quoted: msg })
+
+                    await sock.sendMessage(from, {
+                        text:
+`✅ Audio sent
+
+🎵 ${video.title}
+⚡ SAT Limited`
+                    }, { quoted: msg })
+
+                } catch (e) {
+                    console.log("Audio send error:", e)
+
+                    await sock.sendMessage(from, {
+                        text: "❌ Failed to send audio"
                     }, { quoted: msg })
                 }
 
+                safeDelete(fileName)
+            })
+
+            writeStream.on("error", async (err) => {
+
+                console.log("Write stream error:", err)
+
                 await sock.sendMessage(from, {
-                    video: { url: fileName },
-                    mimetype: "video/mp4",
-                    fileName: `${videoInfo.video_details.title}.mp3`,
-                    caption: `🎥 ${videoInfo.video_details.title}\n⚡ SAT Limited`
+                    text: "❌ Download failed"
                 }, { quoted: msg })
 
-                fs.unlinkSync(fileName)
-                await sock.sendMessage(from, { delete: replyMsg.key })
+                safeDelete(fileName)
             })
 
         } catch (e) {
-            console.error("Ytmp4 error:", e)
-            if (replyMsg) await sock.sendMessage(from, { delete: replyMsg.key })
-            await sock.sendMessage(from, { 
-                text: "❌ Video download failed\n*Reason:* Age restricted or too large" 
+
+            console.log("Play command error:", e)
+
+            await sock.sendMessage(from, {
+                text:
+`❌ Failed to download audio
+
+Possible reasons:
+• Video restricted
+• YouTube blocked request
+• Network issue`
             }, { quoted: msg })
         }
     }
 
-    // 📜 LYRICS DOWNLOADER
-    if (command === "lyrics") {
-        const query = args.join(" ")
-        if (!query) {
+    // =======================
+    // 🎥 YTMP4
+    // =======================
+    if (command === "ytmp4") {
+
+        const url = args[0]
+
+        if (!url || !play.yt_validate(url)) {
             return sock.sendMessage(from, {
-                text: "❌ Give song name!\nExample: .lyrics calm down rema"
+                text:
+`❌ Invalid YouTube link
+
+Example:
+.ytmp4 https://youtube.com/...`
             }, { quoted: msg })
         }
 
-        let replyMsg = await sock.sendMessage(from, {
-            text: `🔍 Searching lyrics for *${query}*...`
-        }, { quoted: msg })
+        try {
+
+            const info = await play.video_info(url)
+
+            const video = info.video_details
+
+            if (video.durationInSec > 600) {
+                return sock.sendMessage(from, {
+                    text: "❌ Video too long. Max 10 minutes."
+                }, { quoted: msg })
+            }
+
+            await sock.sendMessage(from, {
+                text:
+`🎥 Downloading video...
+
+📌 ${video.title}`
+            }, { quoted: msg })
+
+            const stream = await play.stream(url, {
+                quality: 18
+            })
+
+            const fileName = path.join(
+                TEMP_DIR,
+                `${Date.now()}.mp4`
+            )
+
+            const writeStream = fs.createWriteStream(fileName)
+
+            stream.stream.pipe(writeStream)
+
+            writeStream.on("finish", async () => {
+
+                try {
+
+                    const stats = fs.statSync(fileName)
+
+                    if (stats.size > 64 * 1024 * 1024) {
+
+                        safeDelete(fileName)
+
+                        return sock.sendMessage(from, {
+                            text:
+                                "❌ Video too large for WhatsApp"
+                        }, { quoted: msg })
+                    }
+
+                    await sock.sendMessage(from, {
+                        video: {
+                            url: fileName
+                        },
+                        mimetype: "video/mp4",
+                        fileName: `${video.title}.mp4`,
+                        caption:
+`🎥 ${video.title}
+
+⚡ SAT Limited`
+                    }, { quoted: msg })
+
+                } catch (e) {
+
+                    console.log("Video send error:", e)
+
+                    await sock.sendMessage(from, {
+                        text: "❌ Failed to send video"
+                    }, { quoted: msg })
+                }
+
+                safeDelete(fileName)
+            })
+
+            writeStream.on("error", async (err) => {
+
+                console.log("Video stream error:", err)
+
+                await sock.sendMessage(from, {
+                    text: "❌ Video download failed"
+                }, { quoted: msg })
+
+                safeDelete(fileName)
+            })
+
+        } catch (e) {
+
+            console.log("YTMP4 error:", e)
+
+            await sock.sendMessage(from, {
+                text:
+`❌ Failed to download video
+
+Possible reasons:
+• Age restricted
+• Video unavailable
+• Server blocked`
+            }, { quoted: msg })
+        }
+    }
+
+    // =======================
+    // 📜 LYRICS
+    // =======================
+    if (command === "lyrics") {
+
+        const query = args.join(" ").trim()
+
+        if (!query) {
+            return sock.sendMessage(from, {
+                text:
+`❌ Give song name
+
+Example:
+.lyrics calm down rema`
+            }, { quoted: msg })
+        }
 
         try {
+
+            await sock.sendMessage(from, {
+                text: `🔍 Searching lyrics for "${query}"...`
+            }, { quoted: msg })
+
             let lyrics = await lyricsFinder(query, "")
 
+            // Fallback
             if (!lyrics) {
+
                 const options = {
                     apiKey: "free",
                     title: query,
                     artist: "",
                     optimizeQuery: true
                 }
+
                 lyrics = await Genius.getLyrics(options)
             }
 
-            await sock.sendMessage(from, { delete: replyMsg.key })
-
             if (!lyrics) {
                 return sock.sendMessage(from, {
-                    text: `❌ Lyrics not found for *${query}*\n\nTry: .lyrics artist - song name`
+                    text:
+`❌ Lyrics not found
+
+Try:
+.lyrics artist - song`
                 }, { quoted: msg })
             }
 
-            if (lyrics.length > 4000) {
-                const parts = lyrics.match(/.{1,4000}/gs)
+            // WhatsApp safe split
+            const chunks = lyrics.match(/[\s\S]{1,3500}/g)
+
+            for (let i = 0; i < chunks.length; i++) {
+
                 await sock.sendMessage(from, {
-                    text: `📜 *LYRICS: ${query.toUpperCase()}*\n\n${parts[0]}`
+                    text:
+i === 0
+? `📜 *${query.toUpperCase()}*\n\n${chunks[i]}`
+: chunks[i]
                 }, { quoted: msg })
 
-                for (let i = 1; i < parts.length; i++) {
-                    await new Promise(r => setTimeout(r, 1000))
-                    await sock.sendMessage(from, { text: parts[i] })
+                // Prevent spam burst
+                if (i !== chunks.length - 1) {
+                    await new Promise(r => setTimeout(r, 1200))
                 }
-            } else {
-                await sock.sendMessage(from, {
-                    text: `📜 *LYRICS: ${query.toUpperCase()}*\n\n${lyrics}\n\n⚡ Powered by SAT Limited`
-                }, { quoted: msg })
             }
 
         } catch (e) {
-            console.error("Lyrics error:", e)
-            await sock.sendMessage(from, { delete: replyMsg.key })
+
+            console.log("Lyrics error:", e)
+
             await sock.sendMessage(from, {
-                text: "❌ Error fetching lyrics\n*Try:* .lyrics artist - song name"
+                text: "❌ Failed to fetch lyrics"
             }, { quoted: msg })
         }
     }
