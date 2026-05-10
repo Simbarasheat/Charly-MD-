@@ -23,10 +23,11 @@ Designed for education, automation, and advanced group management.
 
 ## 👑 Owner
 
-1. Simbarashe Tembo .A
+1. Simbarashe Tembo .A. 
 2. LumenX
+3. SAT Limited Team
 
-> Powered by SAT Limited
+> ⚡Powered by SAT Limited
 
 ---
 
