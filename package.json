@@ -1,12 +1,14 @@
 {
   "name": "charly-md",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Charly MD WhatsApp Bot",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node index.js",
-    "build": "chmod a+x build.sh && ./build.sh"
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "dependencies": {
     "express": "^4.18.2",
