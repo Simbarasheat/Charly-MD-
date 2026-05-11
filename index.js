@@ -1,15 +1,5 @@
-// =======================
-// ⚠️ SAFETY + CRASH PROTECTION
-// =======================
-require("events").EventEmitter.defaultMaxListeners = 50
-
-process.on("uncaughtException", (err) => {
-    console.error("🔥 Uncaught Exception:", err)
-})
-
-process.on("unhandledRejection", (err) => {
-    console.error("🔥 Unhandled Rejection:", err)
-})
+process.on("uncaughtException", console.error)
+process.on("unhandledRejection", console.error)
 
 // =======================
 // 🌐 EXPRESS (WEB PANEL)
@@ -24,22 +14,18 @@ app.use(express.json())
 app.use(express.static(path.join(__dirname, "public")))
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public/index.html"))
+res.sendFile(path.join(__dirname, "public/index.html"))
 })
 
 // =======================
-// 🤖 WHATSAPP BOT (BAILEYS)
+// 🤖 WHATSAPP BOT
 // =======================
 const makeWASocket = require("@whiskeysockets/baileys").default
-const {
-    useMultiFileAuthState,
-    fetchLatestBaileysVersion
-} = require("@whiskeysockets/baileys")
-
+const { useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys")
 const QRCode = require("qrcode")
 const BOT_IMAGE = "https://files.catbox.moe/37ds7j.png"
 
-// COMMAND HANDLERS
+// COMMANDS
 const general = require("./commands/general")
 const admin = require("./commands/admin")
 const games = require("./commands/games")
@@ -48,259 +34,244 @@ const download = require("./commands/download")
 const sticker = require("./commands/sticker")
 const pair = require("./commands/pair")
 
-let sock
 let isStarting = false
-let reconnecting = false
 let retryCount = 0
 const MAX_RETRIES = 5
+let sock = null
 let latestQR = null
 let startupSent = false
 
-// =======================
-// 🔁 START BOT FUNCTION
-// =======================
 async function startBot() {
-    if (isStarting) return
-    isStarting = true
+if (isStarting) return
+isStarting = true
 
-    console.log("🚀 Starting bot...")
+console.log("🚀 Starting bot...")
 
-    const { state, saveCreds } = await useMultiFileAuthState("session")
-    const { version } = await fetchLatestBaileysVersion()
+const { state, saveCreds } = await useMultiFileAuthState("session")
+const { version } = await fetchLatestBaileysVersion()
 
-    sock = makeWASocket({
-        version,
-        auth: state,
-        printQRInTerminal: true
-    })
+sock = makeWASocket({
+version,
+auth: state,
+printQRInTerminal: true
+})
 
-    sock.ev.on("creds.update", saveCreds)
+sock.ev.on("creds.update", saveCreds)
 
-    // =======================
-    // 🔌 CONNECTION HANDLER
-    // =======================
-    sock.ev.on("connection.update", async (update) => {
-        const { connection, lastDisconnect, qr } = update
+// 🔌 CONNECTION HANDLER
+sock.ev.on("connection.update", async (update) => {
+const { connection, lastDisconnect, qr } = update
 
-        if (qr) {
-            console.log("📱 QR updated")
-            latestQR = qr
-        }
+// ✅ Capture real QR from Baileys
+if (qr) {
+console.log("📱 New QR received")
+latestQR = qr
+}
 
-        if (connection === "open") {
-            console.log("✅ Bot connected to WhatsApp")
-const code = await tempSock.requestPairingCode(phone)
+if (connection === "open") {
+console.log("✅ Bot connected to WhatsApp!")
 
-            reconnecting = false
-            isStarting = false
-            retryCount = 0
+latestQR = null
 
-            if (startupSent) return
-            startupSent = true
+retryCount = 0
 
-            const user = sock.user?.id?.split(":")[0]
+if (startupSent) return
+startupSent = true
 
-            setTimeout(async () => {
-                try {
-                    const msg = await sock.sendMessage(
-                        user + "@s.whatsapp.net",
-                        {
-                            image: { url: BOT_IMAGE },
-                            caption: `
+const deployer = sock.user?.id?.split(":")[0]
+
+// ⏱️ 3 second delay before sending startup message
+setTimeout(async () => {
+try {
+
+const msg = await sock.sendMessage(    
+        deployer + "@s.whatsapp.net",    
+        {    
+            image: { url: BOT_IMAGE },    
+            caption: `
+
 🤖 CHARLY MD ACTIVATED
 
 Type .menu for commands
+
 ⚡ Version: 2.0.0
 👑 Powered by SAT Limited
-                            `
-                        }
-                    )
+`
+}
+)
 
-                    // Auto delete after 1 min
-                    setTimeout(async () => {
-                        try {
-                            await sock.sendMessage(user + "@s.whatsapp.net", {
-                                delete: msg.key
-                            })
-                        } catch (e) {
-                            console.log("Auto delete failed:", e)
-                        }
-                    }, 60000)
+// ⏱️ Auto delete after 1 minute
+setTimeout(async () => {
+try {
+await sock.sendMessage(
+deployer + "@s.whatsapp.net",
+{
+delete: msg.key
+}
+)
+} catch (e) {
+console.log("Auto delete failed:", e)
+}
+}, 60000)
 
-                } catch (e) {
-                    console.log("Startup message failed:", e)
-                }
-            }, 3000)
-        }
+} catch (e) {    
+    console.log("Startup message failed:", e)    
+}
 
-        if (connection === "close") {
-            isStarting = false
+}, 3000) // 3 seconds delay
 
-            const shouldReconnect =
-                lastDisconnect?.error?.output?.statusCode !== 401
+}
 
-            if (!shouldReconnect) {
-                console.log("🚫 Session expired. Delete session folder.")
-                return
-            }
+if (connection === "close") {
+isStarting = false
 
-            if (retryCount >= MAX_RETRIES) {
-                console.log("🚫 Max retries reached. Stopping bot.")
-                return
-            }
+const shouldReconnect =    
+    lastDisconnect?.error?.output?.statusCode !== 401    
 
-            if (reconnecting) return
-            reconnecting = true
+if (!shouldReconnect) {    
+    console.log("🚫 Logged out. Delete session and restart.")    
+    return    
+}    
 
-            retryCount++
+if (retryCount >= MAX_RETRIES) {    
+    console.log("🚫 Max retries reached. Stopping to avoid ban.")    
+    return    
+}    
 
-            const delay = 10000 * retryCount
+retryCount++    
+const delay = 10000 * retryCount    
 
-            console.log(`🔄 Reconnecting in ${delay / 1000}s...`)
+console.log(`🔄 Reconnecting in ${delay / 1000}s...`)    
 
-            setTimeout(() => {
-                reconnecting = false
-                startBot()
-            }, delay)
-        }
-    })
+setTimeout(() => startBot(), delay)
 
-    // =======================
-    // 💬 MESSAGE HANDLER
-    // =======================
-    const cooldowns = new Map()
+}
 
-    sock.ev.on("messages.upsert", async ({ messages }) => {
-        try {
-            const msg = messages[0]
-            if (!msg.message) return
+})
 
-            const from = msg.key.remoteJid
-            const sender = msg.key.participant || from
+// 💬 MESSAGE HANDLER
+sock.ev.on("messages.upsert", async ({ messages }) => {
+try {
+const msg = messages[0]
+if (!msg.message) return
 
-            const text =
-                msg.message.conversation ||
-                msg.message.extendedTextMessage?.text
+const from = msg.key.remoteJid
+const text =
+msg.message.conversation ||
+msg.message.extendedTextMessage?.text
 
-            if (!text || !text.startsWith(".")) return
+if (!text || !text.startsWith(".")) return    
 
-            // =======================
-            // ⏱️ COOLDOWN SYSTEM
-            // =======================
-            const now = Date.now()
-            if (cooldowns.has(sender)) {
-                const expire = cooldowns.get(sender)
-                if (now < expire) return
-            }
-            cooldowns.set(sender, now + 3000)
+const args = text.split(" ")    
+const command = args[0].slice(1).toLowerCase()    
 
-            const args = text.split(" ")
-            const command = args[0].slice(1).toLowerCase()
+const isGroup = from.endsWith("@g.us")    
+const sender = msg.key.participant || msg.key.remoteJid    
 
-            const isGroup = from.endsWith("@g.us")
+let groupMetadata = isGroup ? await sock.groupMetadata(from) : null    
+let participants = isGroup ? groupMetadata.participants : []    
 
-            let groupMetadata = null
-            let participants = []
+const isAdmin = isGroup    
+    ? participants.find(p => p.id === sender)?.admin !== null    
+    : false    
 
-            if (isGroup) {
-                groupMetadata = await sock.groupMetadata(from)
-                participants = groupMetadata.participants
-            }
+const isBotAdmin = isGroup    
+    ? participants.find(p => p.id === sock.user.id)?.admin !== null    
+    : false    
 
-            const isAdmin = isGroup
-                ? participants.find(p => p.id === sender)?.admin
-                : false
+const context = {    
+    sock,    
+    msg,    
+    from,    
+    text,    
+    args,    
+    command,    
+    isGroup,    
+    isAdmin,    
+    isBotAdmin,    
+    sender    
+}    
 
-            const isBotAdmin = isGroup
-                ? participants.find(p => p.id === sock.user?.id)?.admin
-                : false
+await general(context)    
+await admin(context)    
+await ai(context)    
+await games(context)    
+await download(context)    
+await sticker(context)    
+await pair(context)
 
-            const context = {
-                sock,
-                msg,
-                from,
-                text,
-                args,
-                command,
-                isGroup,
-                isAdmin,
-                isBotAdmin,
-                sender
-            }
+} catch (err) {
+console.error("❌ Message handling error:", err)
+}
 
-            await general(context)
-            await admin(context)
-            await ai(context)
-            await games(context)
-            await download(context)
-            await sticker(context)
-            await pair(context)
+})
 
-        } catch (err) {
-            console.error("❌ Message error:", err)
-        }
-    })
 }
 
 // =======================
 // 🔗 API ENDPOINTS
 // =======================
 
-// 📲 Pair Code
+// 📲 Get Pair Code
 app.post("/api/pair-code", async (req, res) => {
-    try {
-        const { phone } = req.body
+try {
+const { phone } = req.body
 
-        if (!phone) {
-            return res.status(400).json({ error: "Phone required" })
-        }
+if (!phone) {
+return res.status(400).json({ error: "Phone number is required" })
+}
 
-        if (!sock) {
-            return res.status(503).json({ error: "Bot not ready" })
-        }
+if (!sock) {
 
-        const code = await sock.requestPairingCode(phone)
-        res.json({ code })
+return res.status(503).json({ error: "Bot is not ready yet. Try again in a few seconds." })
+}
 
-    } catch (err) {
-        console.error(err)
-        res.status(500).json({ error: "Failed to generate code" })
-    }
+const code = await sock.requestPairingCode(phone)
+res.json({ code })
+
+} catch (error) {
+console.error("❌ Pair code error:", error)
+res.status(500).json({ error: error.message || "Failed to generate pair code" })
+}
+
 })
 
-// 📷 QR Code
+// 📷 Get QR Code
 app.get("/api/qr-code", async (req, res) => {
-    try {
-        if (!latestQR) {
-            return res.status(404).json({ error: "QR not ready" })
-        }
+try {
+if (!latestQR) {
+return res.status(404).json({ error: "QR not available yet" })
+}
 
-        const qr = await QRCode.toDataURL(latestQR)
-        res.json({ qr })
+const qr = await QRCode.toDataURL(latestQR)
+res.json({ qr })
 
-    } catch (err) {
-        res.status(500).json({ error: "QR error" })
-    }
+} catch (error) {
+console.error("❌ QR code error:", error)
+res.status(500).json({ error: "Failed to generate QR code" })
+}
+
 })
 
-// Status
+// Optional: Health check
 app.get("/api/status", (req, res) => {
-    res.json({
-        bot: sock?.user ? "connected" : "starting",
-        qrAvailable: !!latestQR
-    })
+res.json({
+bot: sock?.user ? "connected" : "starting",
+qrAvailable: !!latestQR
+})
 })
 
-// 404 fallback
+// Catch unknown routes (prevents HTML errors)
 app.use((req, res) => {
-    res.status(404).json({ error: "Not found" })
+res.status(404).json({ error: "Route not found" })
 })
 
 // =======================
-// 🚀 START SERVER + BOT
+// 🚀 START SERVER
 // =======================
 app.listen(PORT, "0.0.0.0", () => {
-    console.log("🌐 Panel running on port", PORT)
+console.log("🌐 Panel running on port", PORT)
 })
 
+// Start bot
 startBot()
