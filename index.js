@@ -89,6 +89,7 @@ async function startBot() {
 
         if (connection === "open") {
             console.log("✅ Bot connected to WhatsApp")
+const code = await tempSock.requestPairingCode(phone)
 
             reconnecting = false
             isStarting = false
