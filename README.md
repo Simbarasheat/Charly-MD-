@@ -12,7 +12,7 @@
   </a> 
 </div> 
 
-<img src="https://files.catbox.moe/37ds7j.png">
+<img src="https://files.catbox.moe/dl51th.jpg">
 
 </div>
 
