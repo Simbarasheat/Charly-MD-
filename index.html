@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Charly MD V2 - SAT Limited</title>
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Segoe UI',sans-serif;
+    }
+    body{
+      background:linear-gradient(135deg,#dff5f2,#c8ebe6);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:100vh;
+      padding:15px;
+    }
+   .card{
+      background:#fff;
+      padding:25px;
+      border-radius:20px;
+      width:100%;
+      max-width:420px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.1);
+      text-align:center;
+    }
+   .header-img{
+      width:80px;
+      height:80px;
+      border-radius:50%;
+      margin:0 auto 10px;
+      border:3px solid #1abc9c;
+    }
+   .title{
+      font-size:24px;
+      font-weight:bold;
+      margin-bottom:5px;
+    }
+   .subtitle{
+      color:#666;
+      margin-bottom:15px;
+    }
+   .status{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:20px;
+      font-size:12px;
+      font-weight:bold;
+      margin-bottom:20px;
+    }
+   .status.online{ background:#d4f8e8; color:#16a085; }
+   .status.offline{ background:#fde2e2; color:#c0392b; }
+   .status.starting{ background:#fef5e7; color:#e67e22; }
+
+   .tabs{
+      display:flex;
+      margin-bottom:15px;
+      border-radius:12px;
+      overflow:hidden;
+      border:1px solid #eee;
+    }
+   .tab{
+      flex:1;
+      padding:10px;
+      background:#f8f9fa;
+      border:none;
+      cursor:pointer;
+      font-weight:bold;
+      color:#666;
+    }
+   .tab.active{
+      background:#1abc9c;
+      color:white;
+    }
+
+   .tab-content{ display:none; }
+   .tab-content.active{ display:block; }
+
+    #qrBox{
+      background:#f8f9fa;
+      padding:15px;
+      border-radius:12px;
+      margin-bottom:10px;
+    }
+    #qrImg{
+      width:220px;
+      height:220px;
+      margin:0 auto;
+    }
+
+    input{
+      width:100%;
+      padding:14px;
+      border-radius:12px;
+      border:1px solid #ddd;
+      margin-bottom:10px;
+      font-size:16px;
+      outline:none;
+    }
+    button{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:12px;
+      background:#1abc9c;
+      color:white;
+      font-size:16px;
+      cursor:pointer;
+      transition:0.2s;
+      font-weight:bold;
+    }
+    button:hover{ background:#16a085; }
+    button:disabled{ opacity:0.7; cursor:not-allowed; }
+
+   .warning{
+      font-size:12px;
+      color:#e67e22;
+      margin-bottom:15px;
+    }
+   .result{
+      margin-top:15px;
+      font-weight:bold;
+      font-size:16px;
+      white-space:pre-line;
+      color:#16a085;
+    }
+   .error{
+      color:red;
+      margin-top:10px;
+      white-space:pre-line;
+      font-size:14px;
+    }
+   .info{
+      font-size:12px;
+      color:#888;
+      margin-top:10px;
+    }
+   .footer{
+      margin-top:20px;
+      font-size:12px;
+      color:#888;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <img src="https://files.catbox.moe/37ds7j.png" class="header-img" alt="Charly MD">
+  <div class="title">Charly MD V2</div>
+  <div class="subtitle">WhatsApp Bot Panel</div>
+
+  <div id="statusBadge" class="status starting">Checking...</div>
+  <div id="uptime" class="info"></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('qr')">QR Code</button>
+    <button class="tab" onclick="switchTab('pair')">Pair Code</button>
+  </div>
+
+  <!-- QR TAB -->
+  <div id="qrTab" class="tab-content active">
+    <div id="qrBox">
+      <div id="qrStatus">Loading QR...</div>
+      <img id="qrImg" style="display:none;" alt="QR Code">
+    </div>
+    <div class="info">Scan with WhatsApp → Linked Devices</div>
+  </div>
+
+  <!-- PAIR TAB -->
+  <div id="pairTab" class="tab-content">
+    <input type="text" id="phone" placeholder="260772697513" />
+    <div class="warning">
+      ⚠ Enter full number with country code.<br>
+      No +, spaces, or symbols.
+    </div>
+    <button id="pairBtn" onclick="getCode()">Get Pair Code</button>
+    <div class="result" id="result"></div>
+    <div class="error" id="error"></div>
+  </div>
+
+  <div class="footer">
+    v2.0.0 | Powered by SAT Limited<br>
+    Made by Simbarashe Tembo.A.
+  </div>
+</div>
+
+<script>
+let qrInterval;
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+  if(tab === 'qr') {
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('qrTab').classList.add('active');
+    loadQR();
+  } else {
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('pairTab').classList.add('active');
+    clearInterval(qrInterval);
+  }
+}
+
+// STATUS CHECK
+async function checkStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+
+    const badge = document.getElementById('statusBadge');
+    const uptime = document.getElementById('uptime');
+
+    if(data.bot === 'connected') {
+      badge.className = 'status online';
+      badge.innerText = '● ONLINE';
+      uptime.innerText = data.uptime? `Uptime: ${data.uptime}` : '';
+      document.getElementById('qrStatus').innerText = 'Bot already connected';
+      document.getElementById('qrImg').style.display = 'none';
+      clearInterval(qrInterval);
+    } else {
+      badge.className = 'status starting';
+      badge.innerText = '● STARTING';
+      uptime.innerText = '';
+      loadQR();
+    }
+  } catch {
+    const badge = document.getElementById('statusBadge');
+    badge.className = 'status offline';
+    badge.innerText = '● OFFLINE';
+  }
+}
+
+// QR LOADER
+async function loadQR() {
+  try {
+    const res = await fetch('/api/qr-code');
+    if(res.status === 404) {
+      document.getElementById('qrStatus').innerText = 'Waiting for QR...';
+      document.getElementById('qrImg').style.display = 'none';
+      return;
+    }
+    const data = await res.json();
+    if(data.qr) {
+      document.getElementById('qrStatus').innerText = '';
+      document.getElementById('qrImg').src = data.qr;
+      document.getElementById('qrImg').style.display = 'block';
+    }
+  } catch {
+    document.getElementById('qrStatus').innerText = 'QR failed to load';
+  }
+}
+
+// PAIR CODE
+async function getCode() {
+  const phone = document.getElementById("phone").value.trim();
+  const result = document.getElementById("result");
+  const error = document.getElementById("error");
+  const btn = document.getElementById("pairBtn");
+
+  result.innerText = "";
+  error.innerText = "";
+
+  if (!phone ||!/^[0-9]{10,15}$/.test(phone)) {
+    error.innerText = "❌ Enter valid number: 260772697513";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerText = "Generating...";
+  result.innerText = "⏳ Generating pair code...";
+
+  try {
+    const res = await fetch("/api/pair-code", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ phone })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to generate code");
+
+    result.innerText = `✅ Pair Code:\n\n${data.code}\n\n📱 WhatsApp → Linked Devices\n→ Link with phone number`;
+
+    // 60s cooldown
+    let cooldown = 60;
+    btn.disabled = true;
+    const timer = setInterval(() => {
+      btn.innerText = `Wait ${cooldown}s`;
+      cooldown--;
+      if(cooldown < 0) {
+        clearInterval(timer);
+        btn.disabled = false;
+        btn.innerText = "Get Pair Code";
+      }
+    }, 1000);
+
+  } catch (err) {
+    result.innerText = "";
+    error.innerText = "❌ " + err.message;
+    btn.disabled = false;
+    btn.innerText = "Get Pair Code";
+  }
+}
+
+// INIT
+checkStatus();
+qrInterval = setInterval(loadQR, 20000); // Refresh QR every 20s
+setInterval(checkStatus, 10000); // Check status every 10s
+</script>
+</body>
+</html>
