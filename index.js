@@ -347,6 +347,9 @@ Type .menu for commands
 // =======================
 // 📲 PAIR CODE API
 // =======================
+let activePairing = false
+let pairingTimeout = null
+
 app.post(
   "/api/pair-code",
   async (req, res) => {
@@ -356,33 +359,24 @@ app.post(
       let { phone } = req.body
 
       if (!phone) {
-
         return res.status(400).json({
-          error:
-            "Phone number required"
+          error: "Phone number required"
         })
       }
 
       // Clean number
-      phone =
-        phone.replace(/[^0-9]/g, "")
+      phone = phone.replace(/[^0-9]/g, "")
 
       // Validate
-      if (
-        !/^[0-9]{10,15}$/
-        .test(phone)
-      ) {
+      if (!/^[0-9]{10,15}$/.test(phone)) {
 
         return res.status(400).json({
-          error:
-            "Invalid phone number"
+          error: "Invalid phone number"
         })
       }
 
       // Cooldown
-      if (
-        recentPairs.has(phone)
-      ) {
+      if (recentPairs.has(phone)) {
 
         const last =
           recentPairs.get(phone)
@@ -398,7 +392,31 @@ app.post(
         }
       }
 
-      // Socket check
+      // Bot already paired
+      if (sock?.user?.id) {
+
+        return res.status(400).json({
+          error: "Bot already paired"
+        })
+      }
+
+      // Restart socket if dead
+      if (
+        !sock?.ws ||
+        sock.ws.readyState !== 1
+      ) {
+
+        console.log(
+          "🔄 Restarting socket before pairing..."
+        )
+
+        startBot()
+
+        await new Promise(resolve =>
+          setTimeout(resolve, 8000)
+        )
+      }
+
       if (
         !sock?.ws ||
         sock.ws.readyState !== 1
@@ -406,21 +424,23 @@ app.post(
 
         return res.status(503).json({
           error:
-            "WhatsApp not ready yet"
+            "WhatsApp connection failed"
         })
       }
 
-      // Already paired
-      if (sock.user) {
+      // Prevent duplicate pairing requests
+      if (activePairing) {
 
-        return res.status(400).json({
+        return res.status(429).json({
           error:
-            "Bot already paired"
+            "Pairing already in progress"
         })
       }
+
+      activePairing = true
 
       console.log(
-        `📲 Generating code for ${phone}`
+        `📲 Generating pairing code for ${phone}`
       )
 
       const code =
@@ -433,12 +453,41 @@ app.post(
         Date.now()
       )
 
+      // Expire pairing after 5 mins
+      clearTimeout(pairingTimeout)
+
+      pairingTimeout = setTimeout(
+        async () => {
+
+          console.log(
+            "⌛ Pairing expired. Restarting socket..."
+          )
+
+          activePairing = false
+
+          try {
+
+            if (sock?.ws) {
+              sock.ws.close()
+            }
+
+          } catch {}
+
+          startBot()
+
+        },
+        5 * 60 * 1000
+      )
+
       return res.json({
         success: true,
-        code
+        code,
+        expiresIn: "5 minutes"
       })
 
     } catch (error) {
+
+      activePairing = false
 
       console.error(
         "❌ Pair code error:",
