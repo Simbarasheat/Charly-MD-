@@ -128,6 +128,9 @@ async function startBot() {
         // =======================
         if (connection === "open") {
 
+          activePairing = false
+clearTimeout(pairingTimeout)
+
           console.log(
             "✅ Bot connected!"
           )
@@ -230,7 +233,12 @@ Type .menu for commands
           }
 
           console.log(
-            "⚠ Waiting for manual restart"
+  "🔄 Reconnecting in 5 seconds..."
+)
+
+setTimeout(() => {
+  startBot()
+}, 5000)
           )
         }
       }
