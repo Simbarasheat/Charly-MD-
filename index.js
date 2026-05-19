@@ -17,13 +17,6 @@ const startTime = Date.now()
 app.use(express.json())
 app.use(express.static(path.join(__dirname, "public")))
 
-app.use(express.json())
-app.use(express.static(path.join(__dirname, "./")))
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "./index.html"))
-})
-
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public/index.html"))
 })
@@ -38,8 +31,6 @@ const {
   useMultiFileAuthState,
   fetchLatestBaileysVersion
 } = require("@whiskeysockets/baileys")
-
-const QRCode = require("qrcode")
 
 const BOT_IMAGE =
   "https://files.catbox.moe/37ds7j.png"
@@ -66,7 +57,6 @@ let retryCount = 0
 const MAX_RETRIES = 5
 
 let sock = null
-let latestQR = null
 let startupSent = false
 
 const recentPairs = new Map()
@@ -75,6 +65,7 @@ const recentPairs = new Map()
 // 🚀 START BOT
 // =======================
 async function startBot() {
+
   if (isStarting) return
   isStarting = true
 
@@ -82,7 +73,7 @@ async function startBot() {
 
   try {
 
-    // Close old socket safely
+    // Close old socket
     if (sock?.ws) {
       try {
         sock.ws.close()
@@ -98,7 +89,8 @@ async function startBot() {
     sock = makeWASocket({
       version,
       auth: state,
-      browser: ["Ubuntu", "Chrome", "22.04.4"]
+      browser: ["Ubuntu", "Chrome", "22.04.4"],
+      printQRInTerminal: false
     })
 
     sock.ev.on("creds.update", saveCreds)
@@ -110,15 +102,8 @@ async function startBot() {
 
       const {
         connection,
-        lastDisconnect,
-        qr
+        lastDisconnect
       } = update
-
-      // Save QR
-      if (qr) {
-        console.log("📱 New QR received")
-        latestQR = qr
-      }
 
       // =======================
       // ✅ CONNECTED
@@ -127,7 +112,6 @@ async function startBot() {
 
         console.log("✅ Bot connected!")
 
-        latestQR = null
         retryCount = 0
         isStarting = false
 
@@ -174,10 +158,12 @@ Type .menu for commands
                   )
 
                 } catch (e) {
+
                   console.log(
                     "❌ Auto delete failed:",
                     e
                   )
+
                 }
 
               }, 60000)
@@ -266,7 +252,8 @@ Type .menu for commands
         if (!text) return
         if (!text.startsWith(".")) return
 
-        const args = text.trim().split(" ")
+        const args =
+          text.trim().split(" ")
 
         const command =
           args[0].slice(1).toLowerCase()
@@ -379,30 +366,34 @@ app.post("/api/pair-code", async (req, res) => {
       phone.replace(/[^0-9]/g, "")
 
     // Rate limit
-    if (
-      recentPairs.has(phone) &&
-      Date.now() - recentPairs.get(phone)
-      < 60000
-    ) {
+    if (recentPairs.has(phone)) {
 
-      return res.status(429).json({
-        error:
-          "Wait 1 minute before requesting again"
-      })
+      const last =
+        recentPairs.get(phone)
+
+      if (Date.now() - last < 60000) {
+
+        return res.status(429).json({
+          error:
+            "Wait 1 minute before requesting again"
+        })
+      }
     }
 
-    if (!sock) {
+    // Socket check
+    if (
+      !sock?.ws ||
+      sock.ws.readyState !== 1
+    ) {
 
       return res.status(503).json({
         error:
-          "Bot still starting"
+          "WhatsApp not connected yet"
       })
     }
 
     // Already paired
-    if (
-      sock.authState?.creds?.registered
-    ) {
+    if (sock.user) {
 
       return res.status(400).json({
         error:
@@ -415,7 +406,10 @@ app.post("/api/pair-code", async (req, res) => {
 
     recentPairs.set(phone, Date.now())
 
-    res.json({ code })
+    res.json({
+      success: true,
+      code
+    })
 
   } catch (error) {
 
@@ -427,41 +421,7 @@ app.post("/api/pair-code", async (req, res) => {
     res.status(500).json({
       error:
         error.message ||
-        "Failed to generate pair code"
-    })
-  }
-})
-
-// =======================
-// 📷 QR CODE API
-// =======================
-app.get("/api/qr-code", async (req, res) => {
-
-  try {
-
-    if (!latestQR) {
-
-      return res.status(404).json({
-        error:
-          "QR not available"
-      })
-    }
-
-    const qr =
-      await QRCode.toDataURL(latestQR)
-
-    res.json({ qr })
-
-  } catch (error) {
-
-    console.error(
-      "❌ QR generation error:",
-      error
-    )
-
-    res.status(500).json({
-      error:
-        "Failed to generate QR"
+        "Failed to generate pairing code"
     })
   }
 })
@@ -488,8 +448,6 @@ app.get("/api/status", (req, res) => {
       sock?.ws?.readyState === 1
         ? "connected"
         : "starting",
-
-    qrAvailable: !!latestQR,
 
     uptime:
       `${hours}h ${minutes}m`,
@@ -532,4 +490,6 @@ app.listen(PORT, "0.0.0.0", () => {
 // =======================
 // 🚀 START BOT
 // =======================
-startBot()
+setTimeout(() => {
+  startBot()
+}, 5000)
