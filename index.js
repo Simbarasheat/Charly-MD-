@@ -5,7 +5,7 @@ process.on("uncaughtException", console.error)
 process.on("unhandledRejection", console.error)
 
 // =======================
-// 🌐 EXPRESS (WEB PANEL)
+// 🌐 EXPRESS
 // =======================
 const express = require("express")
 const path = require("path")
@@ -14,6 +14,7 @@ const app = express()
 const PORT = process.env.PORT || 3000
 const startTime = Date.now()
 
+app.use(express.json())
 app.use(express.static(__dirname))
 
 app.get("/", (req, res) => {
@@ -28,7 +29,8 @@ const makeWASocket =
 
 const {
   useMultiFileAuthState,
-  fetchLatestBaileysVersion
+  fetchLatestBaileysVersion,
+  DisconnectReason
 } = require("@whiskeysockets/baileys")
 
 const BOT_IMAGE =
@@ -48,14 +50,8 @@ const pair = require("./commands/pair")
 // =======================
 // ⚙️ SETTINGS
 // =======================
-const PANEL_KEY =
-  process.env.PANEL_KEY || "satlimited"
-
-let isStarting = false
-let retryCount = 0
-const MAX_RETRIES = 5
-
 let sock = null
+let isStarting = false
 let startupSent = false
 
 const recentPairs = new Map()
@@ -66,266 +62,281 @@ const recentPairs = new Map()
 async function startBot() {
 
   if (isStarting) return
+
   isStarting = true
 
   console.log("🚀 Starting bot...")
 
   try {
 
-    // Close old socket
+    // Close old socket safely
     if (sock?.ws) {
       try {
         sock.ws.close()
       } catch {}
     }
 
-    const { state, saveCreds } =
-      await useMultiFileAuthState("session")
+    const {
+      state,
+      saveCreds
+    } = await useMultiFileAuthState("session")
 
-    const { version } =
-      await fetchLatestBaileysVersion()
+    const {
+      version
+    } = await fetchLatestBaileysVersion()
 
     sock = makeWASocket({
+
       version,
+
       auth: state,
-      browser: ["Ubuntu", "Chrome", "22.04.4"],
-      printQRInTerminal: false
+
+      browser: [
+        "Ubuntu",
+        "Chrome",
+        "22.04.4"
+      ],
+
+      printQRInTerminal: false,
+
+      generateHighQualityLinkPreview: false,
+
+      syncFullHistory: false,
+
+      markOnlineOnConnect: false
     })
 
-    sock.ev.on("creds.update", saveCreds)
+    sock.ev.on(
+      "creds.update",
+      saveCreds
+    )
 
     // =======================
-    // 🔌 CONNECTION HANDLER
+    // 🔌 CONNECTION UPDATE
     // =======================
-    sock.ev.on("connection.update", async (update) => {
+    sock.ev.on(
+      "connection.update",
+      async (update) => {
 
-      const {
-        connection,
-        lastDisconnect
-      } = update
+        const {
+          connection,
+          lastDisconnect
+        } = update
 
-      // =======================
-      // ✅ CONNECTED
-      // =======================
-      if (connection === "open") {
+        // =======================
+        // ✅ CONNECTED
+        // =======================
+        if (connection === "open") {
 
-        console.log("✅ Bot connected!")
+          console.log(
+            "✅ Bot connected!"
+          )
 
-        retryCount = 0
-        isStarting = false
+          isStarting = false
 
-        if (startupSent) return
-        startupSent = true
+          if (startupSent) return
 
-        try {
+          startupSent = true
 
-          const deployer =
-            sock.user?.id?.split(":")[0]
+          try {
 
-          if (!deployer) return
+            const deployer =
+              sock.user?.id?.split(":")[0]
 
-          setTimeout(async () => {
+            if (!deployer) return
 
-            try {
+            setTimeout(async () => {
 
-              const msg =
-                await sock.sendMessage(
-                  deployer + "@s.whatsapp.net",
-                  {
-                    image: { url: BOT_IMAGE },
-                    caption: `
-🤖 CHARLY MD ACTIVATED
+              try {
+
+                const msg =
+                  await sock.sendMessage(
+                    deployer +
+                    "@s.whatsapp.net",
+                    {
+                      image: {
+                        url: BOT_IMAGE
+                      },
+
+                      caption:
+`🤖 CHARLY MD ACTIVATED
 
 Type .menu for commands
 
 ⚡ Version: 2.0.0
-👑 Powered by SAT Limited
-`
-                  }
-                )
-
-              // Auto delete after 1 min
-              setTimeout(async () => {
-
-                try {
-
-                  await sock.sendMessage(
-                    deployer + "@s.whatsapp.net",
-                    {
-                      delete: msg.key
+👑 Powered by SAT Limited`
                     }
                   )
 
-                } catch (e) {
+                // Auto delete
+                setTimeout(async () => {
 
-                  console.log(
-                    "❌ Auto delete failed:",
-                    e
-                  )
+                  try {
 
-                }
+                    await sock.sendMessage(
+                      deployer +
+                      "@s.whatsapp.net",
+                      {
+                        delete: msg.key
+                      }
+                    )
 
-              }, 60000)
+                  } catch {}
 
-            } catch (e) {
+                }, 60000)
 
-              console.log(
-                "❌ Startup message failed:",
-                e
-              )
+              } catch (e) {
 
-            }
+                console.log(
+                  "❌ Startup message failed:",
+                  e
+                )
 
-          }, 3000)
+              }
 
-        } catch (e) {
-          console.log(e)
+            }, 3000)
+
+          } catch (e) {
+            console.log(e)
+          }
         }
-      }
 
-      // =======================
-      // ❌ CONNECTION CLOSED
-      // =======================
-      if (connection === "close") {
+        // =======================
+        // ❌ CONNECTION CLOSED
+        // =======================
+        if (connection === "close") {
 
-        isStarting = false
+          isStarting = false
 
-        const statusCode =
-          lastDisconnect?.error?.output?.statusCode
-
-        const shouldReconnect =
-          statusCode !== 401
-
-        if (!shouldReconnect) {
+          const statusCode =
+            lastDisconnect?.error?.output?.statusCode
 
           console.log(
-            "🚫 Logged out. Delete session folder."
+            "❌ Connection closed:",
+            statusCode
           )
 
-          return
-        }
+          // Logged out
+          if (
+            statusCode ===
+            DisconnectReason.loggedOut
+          ) {
 
-        if (retryCount >= MAX_RETRIES) {
+            console.log(
+              "🚫 Logged out. Delete session folder."
+            )
+
+            return
+          }
 
           console.log(
-            "🚫 Max retries reached."
+            "⚠ Waiting for manual restart"
           )
-
-          return
         }
-
-        retryCount++
-
-        const delay =
-          Math.min(10000 * retryCount, 60000)
-
-        console.log(
-          `🔄 Reconnecting in ${delay / 1000}s...`
-        )
-
-        setTimeout(() => {
-          startBot()
-        }, delay)
       }
-    })
+    )
 
     // =======================
     // 💬 MESSAGE HANDLER
     // =======================
-    sock.ev.on("messages.upsert", async ({
-      messages
-    }) => {
+    sock.ev.on(
+      "messages.upsert",
+      async ({ messages }) => {
 
-      try {
+        try {
 
-        const msg = messages[0]
+          const msg = messages[0]
 
-        if (!msg.message) return
+          if (!msg.message) return
 
-        const from = msg.key.remoteJid
+          const from =
+            msg.key.remoteJid
 
-        const text =
-          msg.message.conversation ||
-          msg.message.extendedTextMessage?.text
+          const text =
+            msg.message.conversation ||
+            msg.message.extendedTextMessage?.text
 
-        if (!text) return
-        if (!text.startsWith(".")) return
+          if (!text) return
+          if (!text.startsWith(".")) return
 
-        const args =
-          text.trim().split(" ")
+          const args =
+            text.trim().split(" ")
 
-        const command =
-          args[0].slice(1).toLowerCase()
+          const command =
+            args[0]
+            .slice(1)
+            .toLowerCase()
 
-        const isGroup =
-          from.endsWith("@g.us")
+          const isGroup =
+            from.endsWith("@g.us")
 
-        const sender =
-          msg.key.participant ||
-          msg.key.remoteJid
+          const sender =
+            msg.key.participant ||
+            msg.key.remoteJid
 
-        let groupMetadata = null
-        let participants = []
+          let participants = []
 
-        if (isGroup) {
+          if (isGroup) {
 
-          groupMetadata =
-            await sock.groupMetadata(from)
+            const metadata =
+              await sock.groupMetadata(from)
 
-          participants =
-            groupMetadata.participants
+            participants =
+              metadata.participants
+          }
+
+          const isAdmin = isGroup
+            ? participants.find(
+                p => p.id === sender
+              )?.admin != null
+            : false
+
+          const isBotAdmin = isGroup
+            ? participants.find(
+                p => p.id === sock.user.id
+              )?.admin != null
+            : false
+
+          const context = {
+
+            sock,
+            msg,
+            from,
+            text,
+            args,
+            command,
+            isGroup,
+            isAdmin,
+            isBotAdmin,
+            sender
+          }
+
+          // =======================
+          // 📦 COMMANDS
+          // =======================
+          await general(context)
+          await admin(context)
+          await ai(context)
+          await games(context)
+          await download(context)
+          await sticker(context)
+          await pair(context)
+
+        } catch (err) {
+
+          console.error(
+            "❌ Message error:",
+            err
+          )
+
         }
-
-        const isAdmin = isGroup
-          ? participants.find(
-              p => p.id === sender
-            )?.admin != null
-          : false
-
-        const isBotAdmin = isGroup
-          ? participants.find(
-              p => p.id === sock.user.id
-            )?.admin != null
-          : false
-
-        const context = {
-          sock,
-          msg,
-          from,
-          text,
-          args,
-          command,
-          isGroup,
-          isAdmin,
-          isBotAdmin,
-          sender
-        }
-
-        // =======================
-        // 📦 COMMANDS
-        // =======================
-        await general(context)
-        await admin(context)
-        await ai(context)
-        await games(context)
-        await download(context)
-        await sticker(context)
-        await pair(context)
-
-      } catch (err) {
-
-        console.error(
-          "❌ Message handling error:",
-          err
-        )
-
       }
-    })
+    )
 
   } catch (err) {
 
     console.error(
-      "❌ Bot startup error:",
+      "❌ Startup error:",
       err
     )
 
@@ -336,99 +347,117 @@ Type .menu for commands
 // =======================
 // 📲 PAIR CODE API
 // =======================
-app.post("/api/pair-code", async (req, res) => {
+app.post(
+  "/api/pair-code",
+  async (req, res) => {
 
-  try {
+    try {
 
-    let {
-      phone,
-      key
-    } = req.body
+      let { phone } = req.body
 
-    // Security key
-    if (key !== PANEL_KEY) {
+      if (!phone) {
 
-      return res.status(403).json({
-        error: "Unauthorized"
-      })
-    }
-
-    if (!phone) {
-
-      return res.status(400).json({
-        error: "Phone number required"
-      })
-    }
-
-    // Clean number
-    phone =
-      phone.replace(/[^0-9]/g, "")
-
-    // Rate limit
-    if (recentPairs.has(phone)) {
-
-      const last =
-        recentPairs.get(phone)
-
-      if (Date.now() - last < 60000) {
-
-        return res.status(429).json({
+        return res.status(400).json({
           error:
-            "Wait 1 minute before requesting again"
+            "Phone number required"
         })
       }
-    }
 
-    // Socket check
-    if (
-      !sock?.ws ||
-      sock.ws.readyState !== 1
-    ) {
+      // Clean number
+      phone =
+        phone.replace(/[^0-9]/g, "")
 
-      return res.status(503).json({
+      // Validate
+      if (
+        !/^[0-9]{10,15}$/
+        .test(phone)
+      ) {
+
+        return res.status(400).json({
+          error:
+            "Invalid phone number"
+        })
+      }
+
+      // Cooldown
+      if (
+        recentPairs.has(phone)
+      ) {
+
+        const last =
+          recentPairs.get(phone)
+
+        if (
+          Date.now() - last < 60000
+        ) {
+
+          return res.status(429).json({
+            error:
+              "Wait 1 minute before requesting again"
+          })
+        }
+      }
+
+      // Socket check
+      if (
+        !sock?.ws ||
+        sock.ws.readyState !== 1
+      ) {
+
+        return res.status(503).json({
+          error:
+            "WhatsApp not ready yet"
+        })
+      }
+
+      // Already paired
+      if (sock.user) {
+
+        return res.status(400).json({
+          error:
+            "Bot already paired"
+        })
+      }
+
+      console.log(
+        `📲 Generating code for ${phone}`
+      )
+
+      const code =
+        await sock.requestPairingCode(
+          phone
+        )
+
+      recentPairs.set(
+        phone,
+        Date.now()
+      )
+
+      return res.json({
+        success: true,
+        code
+      })
+
+    } catch (error) {
+
+      console.error(
+        "❌ Pair code error:",
+        error
+      )
+
+      return res.status(500).json({
         error:
-          "WhatsApp not connected yet"
+          error.message ||
+          "Failed to generate pair code"
       })
     }
-
-    // Already paired
-    if (sock.user) {
-
-      return res.status(400).json({
-        error:
-          "Bot already paired"
-      })
-    }
-
-    const code =
-      await sock.requestPairingCode(phone)
-
-    recentPairs.set(phone, Date.now())
-
-    res.json({
-      success: true,
-      code
-    })
-
-  } catch (error) {
-
-    console.error(
-      "❌ Pair code error:",
-      error
-    )
-
-    res.status(500).json({
-      error:
-        error.message ||
-        "Failed to generate pairing code"
-    })
   }
-})
+)
 
 // =======================
 // 📊 STATUS API
 // =======================
-app.get("/api/status", (req, res) => {
+app.get("/api/status", (_, res) => {
 
   const uptime =
     Math.floor(
@@ -452,7 +481,6 @@ app.get("/api/status", (req, res) => {
       `${hours}h ${minutes}m`,
 
     version: "2.0.0"
-
   })
 })
 
@@ -464,7 +492,7 @@ app.get("/ping", (_, res) => {
 })
 
 // =======================
-// ❌ UNKNOWN ROUTES
+// ❌ 404
 // =======================
 app.use((req, res) => {
 
@@ -477,14 +505,16 @@ app.use((req, res) => {
 // =======================
 // 🌐 START EXPRESS
 // =======================
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(
+  PORT,
+  "0.0.0.0",
+  () => {
 
-  console.log(
-    "🌐 Panel running on port",
-    PORT
-  )
-
-})
+    console.log(
+      `🌐 Panel running on port ${PORT}`
+    )
+  }
+)
 
 // =======================
 // 🚀 START BOT
