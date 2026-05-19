@@ -1,370 +1,295 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Charly MD V2 - SAT Limited</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charly MD V2</title>
 
-  <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:'Segoe UI',sans-serif;
-    }
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
 
-    body{
-      background:linear-gradient(135deg,#dff5f2,#c8ebe6);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      min-height:100vh;
-      padding:15px;
-    }
+body{
+background:linear-gradient(135deg,#dff5f2,#c8ebe6);
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+padding:15px;
+}
 
-    .card{
-      background:#fff;
-      padding:25px;
-      border-radius:20px;
-      width:100%;
-      max-width:420px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.1);
-      text-align:center;
-    }
+.card{
+background:#fff;
+padding:25px;
+border-radius:20px;
+width:100%;
+max-width:420px;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+text-align:center;
+}
 
-    .header-img{
-      width:80px;
-      height:80px;
-      border-radius:50%;
-      margin:0 auto 10px;
-      border:3px solid #1abc9c;
-    }
+.header-img{
+width:80px;
+height:80px;
+border-radius:50%;
+margin-bottom:10px;
+border:3px solid #1abc9c;
+}
 
-    .title{
-      font-size:24px;
-      font-weight:bold;
-      margin-bottom:5px;
-    }
+.title{
+font-size:24px;
+font-weight:bold;
+margin-bottom:5px;
+}
 
-    .subtitle{
-      color:#666;
-      margin-bottom:15px;
-    }
+.subtitle{
+color:#666;
+margin-bottom:15px;
+}
 
-    .status{
-      display:inline-block;
-      padding:6px 12px;
-      border-radius:20px;
-      font-size:12px;
-      font-weight:bold;
-      margin-bottom:20px;
-    }
+.status{
+display:inline-block;
+padding:6px 12px;
+border-radius:20px;
+font-size:12px;
+font-weight:bold;
+margin-bottom:20px;
+}
 
-    .status.online{
-      background:#d4f8e8;
-      color:#16a085;
-    }
+.online{
+background:#d4f8e8;
+color:#16a085;
+}
 
-    .status.offline{
-      background:#fde2e2;
-      color:#c0392b;
-    }
+.offline{
+background:#fde2e2;
+color:#c0392b;
+}
 
-    .status.starting{
-      background:#fef5e7;
-      color:#e67e22;
-    }
+.starting{
+background:#fef5e7;
+color:#e67e22;
+}
 
-    input{
-      width:100%;
-      padding:14px;
-      border-radius:12px;
-      border:1px solid #ddd;
-      margin-bottom:10px;
-      font-size:16px;
-      outline:none;
-    }
+input{
+width:100%;
+padding:14px;
+border-radius:12px;
+border:1px solid #ddd;
+margin-bottom:10px;
+font-size:16px;
+outline:none;
+}
 
-    button{
-      width:100%;
-      padding:14px;
-      border:none;
-      border-radius:12px;
-      background:#1abc9c;
-      color:white;
-      font-size:16px;
-      cursor:pointer;
-      transition:0.2s;
-      font-weight:bold;
-    }
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:12px;
+background:#1abc9c;
+color:white;
+font-size:16px;
+cursor:pointer;
+font-weight:bold;
+}
 
-    button:hover{
-      background:#16a085;
-    }
+.result{
+margin-top:15px;
+font-size:16px;
+font-weight:bold;
+white-space:pre-line;
+color:#16a085;
+}
 
-    button:disabled{
-      opacity:0.7;
-      cursor:not-allowed;
-    }
+.error{
+margin-top:10px;
+font-size:14px;
+color:red;
+white-space:pre-line;
+}
 
-    .warning{
-      font-size:12px;
-      color:#e67e22;
-      margin-bottom:15px;
-    }
-
-    .result{
-      margin-top:15px;
-      font-weight:bold;
-      font-size:16px;
-      white-space:pre-line;
-      color:#16a085;
-    }
-
-    .error{
-      color:red;
-      margin-top:10px;
-      white-space:pre-line;
-      font-size:14px;
-    }
-
-    .info{
-      font-size:12px;
-      color:#888;
-      margin-top:10px;
-    }
-
-    .footer{
-      margin-top:20px;
-      font-size:12px;
-      color:#888;
-    }
-  </style>
+.footer{
+margin-top:20px;
+font-size:12px;
+color:#888;
+}
+</style>
 </head>
 
 <body>
 
 <div class="card">
 
-  <img
-    src="https://files.catbox.moe/37ds7j.png"
-    class="header-img"
-    alt="Charly MD"
-  >
+<img
+src="https://files.catbox.moe/37ds7j.png"
+class="header-img"
+>
 
-  <div class="title">Charly MD V2</div>
+<div class="title">
+Charly MD V2
+</div>
 
-  <div class="subtitle">
-    WhatsApp Pairing Panel
-  </div>
+<div class="subtitle">
+WhatsApp Pairing Panel
+</div>
 
-  <div id="statusBadge" class="status starting">
-    Checking...
-  </div>
+<div id="status" class="status starting">
+● STARTING
+</div>
 
-  <div id="uptime" class="info"></div>
+<input
+type="text"
+id="phone"
+placeholder="260772697513"
+>
 
-  <input
-    type="text"
-    id="phone"
-    placeholder="260772697513"
-  />
+<button onclick="getCode()" id="btn">
+Get Pair Code
+</button>
 
-  <div class="warning">
-    ⚠ Enter full number with country code.<br>
-    No +, spaces, or symbols.
-  </div>
+<div class="result" id="result"></div>
 
-  <button id="pairBtn" onclick="getCode()">
-    Get Pair Code
-  </button>
+<div class="error" id="error"></div>
 
-  <div class="result" id="result"></div>
-
-  <div class="error" id="error"></div>
-
-  <div class="footer">
-    v2.0.0 | Powered by SAT Limited<br>
-    Made by Simbarashe Tembo.A.
-  </div>
+<div class="footer">
+Powered by SAT Limited
+</div>
 
 </div>
 
 <script>
 
-// =======================
-// STATUS CHECK
-// =======================
-async function checkStatus() {
+async function checkStatus(){
 
-  try {
+try{
 
-    const res =
-      await fetch('/api/status')
+const res =
+await fetch("/api/status")
 
-    const data =
-      await res.json()
+const data =
+await res.json()
 
-    const badge =
-      document.getElementById('statusBadge')
+const el =
+document.getElementById("status")
 
-    const uptime =
-      document.getElementById('uptime')
+if(data.bot === "connected"){
 
-    if (data.bot === 'connected') {
+el.className =
+"status online"
 
-      badge.className =
-        'status online'
+el.innerText =
+"● ONLINE"
 
-      badge.innerText =
-        '● ONLINE'
+}else{
 
-    } else {
+el.className =
+"status starting"
 
-      badge.className =
-        'status starting'
-
-      badge.innerText =
-        '● STARTING'
-
-    }
-
-    uptime.innerText =
-      data.uptime
-        ? `Uptime: ${data.uptime}`
-        : ''
-
-  } catch {
-
-    const badge =
-      document.getElementById('statusBadge')
-
-    badge.className =
-      'status offline'
-
-    badge.innerText =
-      '● OFFLINE'
-  }
+el.innerText =
+"● STARTING"
 }
 
-// =======================
-// PAIR CODE
-// =======================
-async function getCode() {
+}catch{
 
-  const phone =
-    document.getElementById("phone")
-    .value.trim()
+const el =
+document.getElementById("status")
 
-  const result =
-    document.getElementById("result")
+el.className =
+"status offline"
 
-  const error =
-    document.getElementById("error")
+el.innerText =
+"● OFFLINE"
+}
+}
 
-  const btn =
-    document.getElementById("pairBtn")
+async function getCode(){
 
-  result.innerText = ""
-  error.innerText = ""
+const phone =
+document.getElementById("phone")
+.value.trim()
 
-  if (
-    !phone ||
-    !/^[0-9]{10,15}$/.test(phone)
-  ) {
+const result =
+document.getElementById("result")
 
-    error.innerText =
-      "❌ Enter valid number: 260772697513"
+const error =
+document.getElementById("error")
 
-    return
-  }
+const btn =
+document.getElementById("btn")
 
-  btn.disabled = true
-  btn.innerText = "Generating..."
+result.innerText = ""
+error.innerText = ""
 
-  result.innerText =
-    "⏳ Generating pair code..."
+if(
+!phone ||
+!/^[0-9]{10,15}$/.test(phone)
+){
 
-  try {
+error.innerText =
+"Enter valid phone number"
 
-    const res =
-      await fetch("/api/pair-code", {
+return
+}
 
-        method:"POST",
+btn.disabled = true
+btn.innerText = "Generating..."
 
-        headers:{
-          "Content-Type":"application/json"
-        },
+try{
 
-        body:JSON.stringify({
-          phone,
-          key:"satlimited"
-        })
-      })
+const res =
+await fetch("/api/pair-code",{
 
-    const data =
-      await res.json()
+method:"POST",
 
-    if (!res.ok) {
+headers:{
+"Content-Type":"application/json"
+},
 
-      throw new Error(
-        data.error ||
-        "Failed to generate code"
-      )
-    }
+body:JSON.stringify({
+phone
+})
+})
 
-    result.innerText =
+const data =
+await res.json()
+
+if(!res.ok){
+
+throw new Error(
+data.error || "Failed"
+)
+}
+
+result.innerText =
 `✅ Pair Code:
 
 ${data.code}
 
-📱 WhatsApp → Linked Devices
+WhatsApp → Linked Devices
 → Link with phone number`
 
-    // Cooldown
-    let cooldown = 60
+}catch(err){
 
-    const timer =
-      setInterval(() => {
+error.innerText =
+"❌ " + err.message
 
-        btn.innerText =
-          `Wait ${cooldown}s`
+}finally{
 
-        cooldown--
-
-        if (cooldown < 0) {
-
-          clearInterval(timer)
-
-          btn.disabled = false
-
-          btn.innerText =
-            "Get Pair Code"
-        }
-
-      }, 1000)
-
-  } catch (err) {
-
-    result.innerText = ""
-
-    error.innerText =
-      "❌ " + err.message
-
-    btn.disabled = false
-
-    btn.innerText =
-      "Get Pair Code"
-  }
+btn.disabled = false
+btn.innerText = "Get Pair Code"
+}
 }
 
-// =======================
-// INIT
-// =======================
 checkStatus()
 
-setInterval(checkStatus, 10000)
-
+setInterval(
+checkStatus,
+10000
+)
 </script>
 
 </body>
