@@ -34,7 +34,7 @@ const {
 } = require("@whiskeysockets/baileys")
 
 const BOT_IMAGE =
-  "https://files.catbox.moe/37ds7j.png"
+  "https://files.catbox.moe/w4zgr6.png"
 
 // =======================
 // 📦 COMMANDS
