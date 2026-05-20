@@ -239,7 +239,6 @@ Type .menu for commands
 setTimeout(() => {
   startBot()
 }, 5000)
-          )
         }
       }
     )
