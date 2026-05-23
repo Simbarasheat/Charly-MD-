@@ -9,9 +9,9 @@ process.on("unhandledRejection", console.error)
 // =======================
 const express = require("express")
 const path = require("path")
+const fs = require("fs")
 
 const app = express()
-const PORT = process.env.PORT || 3000
 const startTime = Date.now()
 
 app.use(express.json())
@@ -24,518 +24,92 @@ app.get("/", (req, res) => {
 // =======================
 // 🤖 WHATSAPP BOT
 // =======================
-const makeWASocket =
-  require("@whiskeysockets/baileys").default
+const makeWASocket = require("@whiskeysockets/baileys").default
+const { useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason } = require("@whiskeysockets/baileys")
 
-const {
-  useMultiFileAuthState,
-  fetchLatestBaileysVersion,
-  DisconnectReason
-} = require("@whiskeysockets/baileys")
-
-const BOT_IMAGE =
-  "https://files.catbox.moe/w4zgr6.png"
-
-// =======================
-// 📦 COMMANDS
-// =======================
-const general = require("./commands/general")
-const admin = require("./commands/admin")
-const games = require("./commands/games")
-const ai = require("./commands/ai")
-const download = require("./commands/download")
-const sticker = require("./commands/sticker")
-const pair = require("./commands/pair")
-
-// =======================
-// ⚙️ SETTINGS
-// =======================
 let sock = null
-let isStarting = false
-let startupSent = false
-
 const recentPairs = new Map()
+let activePairing = false
 
-// =======================
-// 🚀 START BOT
-// =======================
-async function startBot() {
-
-  if (isStarting) return
-
-  isStarting = true
-
-  console.log("🚀 Starting bot...")
-
-  try {
-
-    // Close old socket safely
-    if (sock?.ws) {
-      try {
-        sock.ws.close()
-      } catch {}
-    }
-
-    const {
-      state,
-      saveCreds
-    } = await useMultiFileAuthState("session")
-
-    const {
-      version
-    } = await fetchLatestBaileysVersion()
-
-    sock = makeWASocket({
-
-      version,
-
-      auth: state,
-
-      browser: [
-        "Ubuntu",
-        "Chrome",
-        "22.04.4"
-      ],
-
-      printQRInTerminal: false,
-
-      generateHighQualityLinkPreview: false,
-
-      syncFullHistory: false,
-
-      markOnlineOnConnect: false
-    })
-
-    sock.ev.on(
-      "creds.update",
-      saveCreds
-    )
-
-    // =======================
-    // 🔌 CONNECTION UPDATE
-    // =======================
-    sock.ev.on(
-      "connection.update",
-      async (update) => {
-
-        const {
-          connection,
-          lastDisconnect
-        } = update
-
-        // =======================
-        // ✅ CONNECTED
-        // =======================
-        if (connection === "open") {
-
-          activePairing = false
-clearTimeout(pairingTimeout)
-
-          console.log(
-            "✅ Bot connected!"
-          )
-
-          isStarting = false
-
-          if (startupSent) return
-
-          startupSent = true
-
-          try {
-
-            const deployer =
-              sock.user?.id?.split(":")[0]
-
-            if (!deployer) return
-
-            setTimeout(async () => {
-
-              try {
-
-                const msg =
-                  await sock.sendMessage(
-                    deployer +
-                    "@s.whatsapp.net",
-                    {
-                      image: {
-                        url: BOT_IMAGE
-                      },
-
-                      caption:
-`🤖 CHARLY MD ACTIVATED
-
-Type .menu for commands
-
-⚡ Version: 2.0.0
-👑 Powered by SAT Limited`
-                    }
-                  )
-
-                // Auto delete
-                setTimeout(async () => {
-
-                  try {
-
-                    await sock.sendMessage(
-                      deployer +
-                      "@s.whatsapp.net",
-                      {
-                        delete: msg.key
-                      }
-                    )
-
-                  } catch {}
-
-                }, 60000)
-
-              } catch (e) {
-
-                console.log(
-                  "❌ Startup message failed:",
-                  e
-                )
-
-              }
-
-            }, 3000)
-
-          } catch (e) {
-            console.log(e)
-          }
-        }
-
-        // =======================
-        // ❌ CONNECTION CLOSED
-        // =======================
-        if (connection === "close") {
-
-          isStarting = false
-
-          const statusCode =
-            lastDisconnect?.error?.output?.statusCode
-
-          console.log(
-            "❌ Connection closed:",
-            statusCode
-          )
-
-          // Logged out
-          if (
-            statusCode ===
-            DisconnectReason.loggedOut
-          ) {
-
-            console.log(
-              "🚫 Logged out. Delete session folder."
-            )
-
-            return
-          }
-
-          console.log(
-  "🔄 Reconnecting in 5 seconds..."
-)
-
-setTimeout(() => {
-  startBot()
-}, 5000)
-        }
-      }
-    )
-
-    // =======================
-    // 💬 MESSAGE HANDLER
-    // =======================
-    sock.ev.on(
-      "messages.upsert",
-      async ({ messages }) => {
-
-        try {
-
-          const msg = messages[0]
-
-          if (!msg.message) return
-
-          const from =
-            msg.key.remoteJid
-
-          const text =
-            msg.message.conversation ||
-            msg.message.extendedTextMessage?.text
-
-          if (!text) return
-          if (!text.startsWith(".")) return
-
-          const args =
-            text.trim().split(" ")
-
-          const command =
-            args[0]
-            .slice(1)
-            .toLowerCase()
-
-          const isGroup =
-            from.endsWith("@g.us")
-
-          const sender =
-            msg.key.participant ||
-            msg.key.remoteJid
-
-          let participants = []
-
-          if (isGroup) {
-
-            const metadata =
-              await sock.groupMetadata(from)
-
-            participants =
-              metadata.participants
-          }
-
-          const isAdmin = isGroup
-            ? participants.find(
-                p => p.id === sender
-              )?.admin != null
-            : false
-
-          const isBotAdmin = isGroup
-            ? participants.find(
-                p => p.id === sock.user.id
-              )?.admin != null
-            : false
-
-          const context = {
-
-            sock,
-            msg,
-            from,
-            text,
-            args,
-            command,
-            isGroup,
-            isAdmin,
-            isBotAdmin,
-            sender
-          }
-
-          // =======================
-          // 📦 COMMANDS
-          // =======================
-          await general(context)
-          await admin(context)
-          await ai(context)
-          await games(context)
-          await download(context)
-          await sticker(context)
-          await pair(context)
-
-        } catch (err) {
-
-          console.error(
-            "❌ Message error:",
-            err
-          )
-
-        }
-      }
-    )
-
-  } catch (err) {
-
-    console.error(
-      "❌ Startup error:",
-      err
-    )
-
-    isStarting = false
-  }
-}
+// Vercel /tmp is writable, use it for session
+const SESSION_DIR = "/tmp/session"
 
 // =======================
 // 📲 PAIR CODE API
 // =======================
-let activePairing = false
-let pairingTimeout = null
+app.post("/api/pair-code", async (req, res) => {
+  try {
+    let { phone } = req.body
+    if (!phone) return res.status(400).json({ error: "Phone number required" })
 
-app.post(
-  "/api/pair-code",
-  async (req, res) => {
+    phone = phone.replace(/[^0-9]/g, "")
+    if (!/^[0-9]{10,15}$/.test(phone)) return res.status(400).json({ error: "Invalid phone number" })
 
-    try {
-
-      let { phone } = req.body
-
-      if (!phone) {
-        return res.status(400).json({
-          error: "Phone number required"
-        })
-      }
-
-      // Clean number
-      phone = phone.replace(/[^0-9]/g, "")
-
-      // Validate
-      if (!/^[0-9]{10,15}$/.test(phone)) {
-
-        return res.status(400).json({
-          error: "Invalid phone number"
-        })
-      }
-
-      // Cooldown
-      if (recentPairs.has(phone)) {
-
-        const last =
-          recentPairs.get(phone)
-
-        if (
-          Date.now() - last < 60000
-        ) {
-
-          return res.status(429).json({
-            error:
-              "Wait 1 minute before requesting again"
-          })
-        }
-      }
-
-      // Bot already paired
-      if (sock?.user?.id) {
-
-        return res.status(400).json({
-          error: "Bot already paired"
-        })
-      }
-
-      // Restart socket if dead
-      if (
-        !sock?.ws ||
-        sock.ws.readyState !== 1
-      ) {
-
-        console.log(
-          "🔄 Restarting socket before pairing..."
-        )
-
-        startBot()
-
-        await new Promise(resolve =>
-          setTimeout(resolve, 8000)
-        )
-      }
-
-      if (
-        !sock?.ws ||
-        sock.ws.readyState !== 1
-      ) {
-
-        return res.status(503).json({
-          error:
-            "WhatsApp connection failed"
-        })
-      }
-
-      // Prevent duplicate pairing requests
-      if (activePairing) {
-
-        return res.status(429).json({
-          error:
-            "Pairing already in progress"
-        })
-      }
-
-      activePairing = true
-
-      console.log(
-        `📲 Generating pairing code for ${phone}`
-      )
-
-      const code =
-        await sock.requestPairingCode(
-          phone
-        )
-
-      recentPairs.set(
-        phone,
-        Date.now()
-      )
-
-      // Expire pairing after 5 mins
-      clearTimeout(pairingTimeout)
-
-      pairingTimeout = setTimeout(
-        async () => {
-
-          console.log(
-            "⌛ Pairing expired. Restarting socket..."
-          )
-
-          activePairing = false
-
-          try {
-
-            if (sock?.ws) {
-              sock.ws.close()
-            }
-
-          } catch {}
-
-          startBot()
-
-        },
-        5 * 60 * 1000
-      )
-
-      return res.json({
-        success: true,
-        code,
-        expiresIn: "5 minutes"
-      })
-
-    } catch (error) {
-
-      activePairing = false
-
-      console.error(
-        "❌ Pair code error:",
-        error
-      )
-
-      return res.status(500).json({
-        error:
-          error.message ||
-          "Failed to generate pair code"
-      })
+    // 1 min cooldown
+    if (recentPairs.has(phone) && Date.now() - recentPairs.get(phone) < 60000) {
+      return res.status(429).json({ error: "Wait 1 minute before requesting again" })
     }
+
+    // Create session dir if not exists
+    if (!fs.existsSync(SESSION_DIR)) {
+      fs.mkdirSync(SESSION_DIR, { recursive: true })
+    }
+
+    // Create socket only when needed
+    if (!sock || sock.ws?.readyState !== 1) {
+      const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR)
+      const { version } = await fetchLatestBaileysVersion()
+      
+      sock = makeWASocket({
+        version,
+        auth: state,
+        printQRInTerminal: false,
+        browser: ["Ubuntu", "Chrome", "22.04.4"],
+        syncFullHistory: false,
+        markOnlineOnConnect: false
+      })
+      
+      sock.ev.on("creds.update", saveCreds)
+      
+      // Wait for socket to init
+      await new Promise(r => setTimeout(r, 4000))
+    }
+
+    if (activePairing) return res.status(429).json({ error: "Pairing already in progress" })
+
+    activePairing = true
+    const code = await sock.requestPairingCode(phone)
+    recentPairs.set(phone, Date.now())
+    activePairing = false
+
+    // Auto close socket after 30s to save memory
+    setTimeout(() => {
+      if (sock?.ws) {
+        try { sock.ws.close() } catch {}
+        sock = null
+      }
+    }, 30000)
+
+    res.json({ success: true, code, expiresIn: "5 minutes" })
+
+  } catch (error) {
+    activePairing = false
+    console.error("❌ Pair code error:", error)
+    res.status(500).json({ error: error.message || "Failed to generate pair code" })
   }
-)
+})
 
 // =======================
 // 📊 STATUS API
 // =======================
 app.get("/api/status", (_, res) => {
-
-  const uptime =
-    Math.floor(
-      (Date.now() - startTime) / 1000
-    )
-
-  const hours =
-    Math.floor(uptime / 3600)
-
-  const minutes =
-    Math.floor((uptime % 3600) / 60)
+  const uptime = Math.floor((Date.now() - startTime) / 1000)
+  const hours = Math.floor(uptime / 3600)
+  const minutes = Math.floor((uptime % 3600) / 60)
 
   res.json({
-
-    bot:
-      sock?.ws?.readyState === 1
-        ? "connected"
-        : "starting",
-
-    uptime:
-      `${hours}h ${minutes}m`,
-
+    bot: sock?.ws?.readyState === 1 ? "connected" : "offline",
+    uptime: `${hours}h ${minutes}m`,
     version: "2.0.0"
   })
 })
@@ -551,30 +125,10 @@ app.get("/ping", (_, res) => {
 // ❌ 404
 // =======================
 app.use((req, res) => {
-
-  res.status(404).json({
-    error: "Route not found"
-  })
-
+  res.status(404).json({ error: "Route not found" })
 })
 
 // =======================
-// 🌐 START EXPRESS
+// 🚀 EXPORT FOR VERCEL
 // =======================
-app.listen(
-  PORT,
-  "0.0.0.0",
-  () => {
-
-    console.log(
-      `🌐 Panel running on port ${PORT}`
-    )
-  }
-)
-
-// =======================
-// 🚀 START BOT
-// =======================
-setTimeout(() => {
-  startBot()
-}, 5000)
+module.exports = app
