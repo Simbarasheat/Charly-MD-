@@ -5,5 +5,10 @@
   ],
   "routes": [
     { "src": "/(.*)", "dest": "index.js" }
-  ]
+  ],
+  "functions": {
+    "index.js": {
+      "maxDuration": 60
+    }
+  }
 }
