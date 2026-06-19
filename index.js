@@ -1,12 +1,9 @@
 // =======================
 // 🚨 ERROR HANDLERS
 // =======================
-process.on("uncaughtException", console.error)
-process.on("unhandledRejection", console.error)
+process.on("uncaughtException", err => console.error("Uncaught:", err))
+process.on("unhandledRejection", err => console.error("Unhandled:", err))
 
-// =======================
-// 🌐 EXPRESS
-// =======================
 const express = require("express")
 const path = require("path")
 const fs = require("fs")
@@ -14,7 +11,12 @@ const fs = require("fs")
 const app = express()
 const startTime = Date.now()
 
+// Always return JSON + parse JSON body
 app.use(express.json())
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'application/json')
+  next()
+})
 app.use(express.static(__dirname))
 
 app.get("/", (req, res) => {
@@ -30,9 +32,31 @@ const { useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason } = r
 let sock = null
 const recentPairs = new Map()
 let activePairing = false
-
-// Vercel /tmp is writable, use it for session
 const SESSION_DIR = "/tmp/session"
+
+async function initSocket() {
+  if (sock?.ws?.readyState === 1) return sock
+  
+  if (!fs.existsSync(SESSION_DIR)) {
+    fs.mkdirSync(SESSION_DIR, { recursive: true })
+  }
+
+  const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR)
+  const { version } = await fetchLatestBaileysVersion()
+  
+  sock = makeWASocket({
+    version,
+    auth: state,
+    printQRInTerminal: false,
+    browser: ["Ubuntu", "Chrome", "22.04.4"],
+    syncFullHistory: false,
+    markOnlineOnConnect: false
+  })
+  
+  sock.ev.on("creds.update", saveCreds)
+  await new Promise(r => setTimeout(r, 3000))
+  return sock
+}
 
 // =======================
 // 📲 PAIR CODE API
@@ -40,49 +64,25 @@ const SESSION_DIR = "/tmp/session"
 app.post("/api/pair-code", async (req, res) => {
   try {
     let { phone } = req.body
-    if (!phone) return res.status(400).json({ error: "Phone number required" })
+    if (!phone) return res.status(400).json({ success: false, error: "Phone number required" })
 
     phone = phone.replace(/[^0-9]/g, "")
-    if (!/^[0-9]{10,15}$/.test(phone)) return res.status(400).json({ error: "Invalid phone number" })
+    if (!/^[0-9]{10,15}$/.test(phone)) return res.status(400).json({ success: false, error: "Invalid phone number" })
 
     // 1 min cooldown
     if (recentPairs.has(phone) && Date.now() - recentPairs.get(phone) < 60000) {
-      return res.status(429).json({ error: "Wait 1 minute before requesting again" })
+      return res.status(429).json({ success: false, error: "Wait 1 minute before requesting again" })
     }
 
-    // Create session dir if not exists
-    if (!fs.existsSync(SESSION_DIR)) {
-      fs.mkdirSync(SESSION_DIR, { recursive: true })
-    }
-
-    // Create socket only when needed
-    if (!sock || sock.ws?.readyState !== 1) {
-      const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR)
-      const { version } = await fetchLatestBaileysVersion()
-      
-      sock = makeWASocket({
-        version,
-        auth: state,
-        printQRInTerminal: false,
-        browser: ["Ubuntu", "Chrome", "22.04.4"],
-        syncFullHistory: false,
-        markOnlineOnConnect: false
-      })
-      
-      sock.ev.on("creds.update", saveCreds)
-      
-      // Wait for socket to init
-      await new Promise(r => setTimeout(r, 4000))
-    }
-
-    if (activePairing) return res.status(429).json({ error: "Pairing already in progress" })
+    if (activePairing) return res.status(429).json({ success: false, error: "Pairing already in progress" })
 
     activePairing = true
-    const code = await sock.requestPairingCode(phone)
+    const socket = await initSocket()
+    const code = await socket.requestPairingCode(phone)
     recentPairs.set(phone, Date.now())
     activePairing = false
 
-    // Auto close socket after 30s to save memory
+    // Auto close socket after 30s
     setTimeout(() => {
       if (sock?.ws) {
         try { sock.ws.close() } catch {}
@@ -90,12 +90,12 @@ app.post("/api/pair-code", async (req, res) => {
       }
     }, 30000)
 
-    res.json({ success: true, code, expiresIn: "5 minutes" })
+    return res.json({ success: true, code, expiresIn: "5 minutes" })
 
   } catch (error) {
     activePairing = false
     console.error("❌ Pair code error:", error)
-    res.status(500).json({ error: error.message || "Failed to generate pair code" })
+    return res.status(500).json({ success: false, error: error.message || "Failed to generate pair code" })
   }
 })
 
@@ -108,27 +108,26 @@ app.get("/api/status", (_, res) => {
   const minutes = Math.floor((uptime % 3600) / 60)
 
   res.json({
+    success: true,
     bot: sock?.ws?.readyState === 1 ? "connected" : "offline",
     uptime: `${hours}h ${minutes}m`,
     version: "2.0.0"
   })
 })
 
-// =======================
-// ❤️ KEEP ALIVE
-// =======================
 app.get("/ping", (_, res) => {
-  res.send("pong")
+  res.json({ success: true, message: "pong" })
 })
 
-// =======================
-// ❌ 404
-// =======================
+// 404 handler - always JSON
 app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" })
+  res.status(404).json({ success: false, error: "Route not found" })
 })
 
-// =======================
-// 🚀 EXPORT FOR VERCEL
-// =======================
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err)
+  res.status(500).json({ success: false, error: "Internal server error" })
+})
+
 module.exports = app
