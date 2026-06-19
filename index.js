@@ -4,14 +4,31 @@
 process.on("uncaughtException", err => console.error("Uncaught:", err))
 process.on("unhandledRejection", err => console.error("Unhandled:", err))
 
+// =======================
+// 📦 IMPORTS
+// =======================
+const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason } = require("@whiskeysockets/baileys")
 const express = require("express")
 const path = require("path")
 const fs = require("fs")
+const settings = require("./settings")
 
+// =======================
+// 📁 COMMAND HANDLERS - Manual like your screenshot
+// =======================
+const games = require("./commands/games")
+const ai = require("./commands/ai")
+const download = require("./commands/download")
+const sticker = require("./commands/sticker")
+const menu = require("./commands/menu")
+const pair = require("./commands/pair") // <- add new commands here
+
+// =======================
+// 🌐 EXPRESS APP
+// =======================
 const app = express()
 const startTime = Date.now()
 
-// Always return JSON + parse JSON body
 app.use(express.json())
 app.use((req, res, next) => {
   res.setHeader('Content-Type', 'application/json')
@@ -26,24 +43,23 @@ app.get("/", (req, res) => {
 // =======================
 // 🤖 WHATSAPP BOT
 // =======================
-const makeWASocket = require("@whiskeysockets/baileys").default
-const { useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason } = require("@whiskeysockets/baileys")
-
 let sock = null
 const recentPairs = new Map()
 let activePairing = false
 const SESSION_DIR = "/tmp/session"
+let isStarting = false
+let retryCount = 0
 
 async function initSocket() {
   if (sock?.ws?.readyState === 1) return sock
-  
+
   if (!fs.existsSync(SESSION_DIR)) {
     fs.mkdirSync(SESSION_DIR, { recursive: true })
   }
 
   const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR)
   const { version } = await fetchLatestBaileysVersion()
-  
+
   sock = makeWASocket({
     version,
     auth: state,
@@ -52,82 +68,41 @@ async function initSocket() {
     syncFullHistory: false,
     markOnlineOnConnect: false
   })
-  
+
   sock.ev.on("creds.update", saveCreds)
-  await new Promise(r => setTimeout(r, 3000))
-  return sock
-}
 
-// =======================
-// 📲 PAIR CODE API
-// =======================
-app.post("/api/pair-code", async (req, res) => {
-  try {
-    let { phone } = req.body
-    if (!phone) return res.status(400).json({ success: false, error: "Phone number required" })
+  // =======================
+  // 📨 MESSAGE HANDLER
+  // =======================
+  sock.ev.on("messages.upsert", async ({ messages }) => {
+    try {
+      const m = messages[0]
+      if (!m.message || m.key.fromMe) return
 
-    phone = phone.replace(/[^0-9]/g, "")
-    if (!/^[0-9]{10,15}$/.test(phone)) return res.status(400).json({ success: false, error: "Invalid phone number" })
+      const msgType = Object.keys(m.message)[0]
+      const text = m.message.conversation || m.message[msgType]?.text || m.message[msgType]?.caption || ""
+      const prefix = settings.prefix
 
-    // 1 min cooldown
-    if (recentPairs.has(phone) && Date.now() - recentPairs.get(phone) < 60000) {
-      return res.status(429).json({ success: false, error: "Wait 1 minute before requesting again" })
+      if (!text.startsWith(prefix)) return
+
+      const args = text.slice(prefix.length).trim().split(/ +/)
+      const command = args.shift().toLowerCase()
+
+      const context = { sock, m, args, text, command, prefix }
+
+      // =======================
+      // RUN COMMAND HANDLERS - Manual order like screenshot
+      // =======================
+      await games(context)
+      await ai(context)
+      await download(context)
+      await sticker(context)
+      await menu(context)
+      await pair(context) // <- add here too
+
+    } catch (err) {
+      console.error("❌ Message handling error:", err)
     }
-
-    if (activePairing) return res.status(429).json({ success: false, error: "Pairing already in progress" })
-
-    activePairing = true
-    const socket = await initSocket()
-    const code = await socket.requestPairingCode(phone)
-    recentPairs.set(phone, Date.now())
-    activePairing = false
-
-    // Auto close socket after 30s
-    setTimeout(() => {
-      if (sock?.ws) {
-        try { sock.ws.close() } catch {}
-        sock = null
-      }
-    }, 30000)
-
-    return res.json({ success: true, code, expiresIn: "5 minutes" })
-
-  } catch (error) {
-    activePairing = false
-    console.error("❌ Pair code error:", error)
-    return res.status(500).json({ success: false, error: error.message || "Failed to generate pair code" })
-  }
-})
-
-// =======================
-// 📊 STATUS API
-// =======================
-app.get("/api/status", (_, res) => {
-  const uptime = Math.floor((Date.now() - startTime) / 1000)
-  const hours = Math.floor(uptime / 3600)
-  const minutes = Math.floor((uptime % 3600) / 60)
-
-  res.json({
-    success: true,
-    bot: sock?.ws?.readyState === 1 ? "connected" : "offline",
-    uptime: `${hours}h ${minutes}m`,
-    version: "2.0.0"
   })
-})
 
-app.get("/ping", (_, res) => {
-  res.json({ success: true, message: "pong" })
-})
-
-// 404 handler - always JSON
-app.use((req, res) => {
-  res.status(404).json({ success: false, error: "Route not found" })
-})
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(err)
-  res.status(500).json({ success: false, error: "Internal server error" })
-})
-
-module.exports = app
+  sock.ev.on("connection.update
