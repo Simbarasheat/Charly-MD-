@@ -6,144 +6,35 @@
 <title>Charly MD V2</title>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Segoe UI',sans-serif;
-}
-
-body{
-background:linear-gradient(135deg,#dff5f2,#c8ebe6);
-display:flex;
-justify-content:center;
-align-items:center;
-min-height:100vh;
-padding:15px;
-}
-
-.card{
-background:#fff;
-padding:25px;
-border-radius:20px;
-width:100%;
-max-width:420px;
-box-shadow:0 10px 30px rgba(0,0,0,0.1);
-text-align:center;
-}
-
-.header-img{
-width:80px;
-height:80px;
-border-radius:50%;
-margin-bottom:10px;
-border:3px solid #1abc9c;
-}
-
-.title{
-font-size:24px;
-font-weight:bold;
-margin-bottom:5px;
-}
-
-.subtitle{
-color:#666;
-margin-bottom:15px;
-}
-
-.status{
-display:inline-block;
-padding:6px 12px;
-border-radius:20px;
-font-size:12px;
-font-weight:bold;
-margin-bottom:20px;
-}
-
-.online{
-background:#d4f8e8;
-color:#16a085;
-}
-
-.offline{
-background:#fde2e2;
-color:#c0392b;
-}
-
-.starting{
-background:#fef5e7;
-color:#e67e22;
-}
-
-input{
-width:100%;
-padding:14px;
-border-radius:12px;
-border:1px solid #ddd;
-margin-bottom:10px;
-font-size:16px;
-outline:none;
-}
-
-input:focus{
-border-color:#1abc9c;
-}
-
-button{
-width:100%;
-padding:14px;
-border:none;
-border-radius:12px;
-background:#1abc9c;
-color:white;
-font-size:16px;
-cursor:pointer;
-font-weight:bold;
-margin-bottom:8px;
-}
-
-button:disabled{
-background:#bdc3c7;
-cursor:not-allowed;
-}
-
-.copy-btn{
-background:#3498db;
-display:none;
-}
-
-.result{
-margin-top:15px;
-font-size:16px;
-font-weight:bold;
-white-space:pre-line;
-color:#16a085;
-}
-
-.error{
-margin-top:10px;
-font-size:14px;
-color:red;
-white-space:pre-line;
-}
-
-.footer{
-margin-top:20px;
-font-size:12px;
-color:#888;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+body{background:linear-gradient(135deg,#dff5f2,#c8ebe6);display:flex;justify-content:center;align-items:center;min-height:100vh;padding:15px;}
+.card{background:#fff;padding:25px;border-radius:20px;width:100%;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,0.1);text-align:center;}
+.header-img{width:80px;height:80px;border-radius:50%;margin-bottom:10px;border:3px solid #1abc9c;}
+.title{font-size:24px;font-weight:bold;margin-bottom:5px;}
+.subtitle{color:#666;margin-bottom:15px;}
+.status{display:inline-block;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:bold;margin-bottom:20px;}
+.online{background:#d4f8e8;color:#16a085;}
+.offline{background:#fde2e2;color:#c0392b;}
+.starting{background:#fef5e7;color:#e67e22;}
+input{width:100%;padding:14px;border-radius:12px;border:1px solid #ddd;margin-bottom:10px;font-size:16px;outline:none;}
+input:focus{border-color:#1abc9c;}
+button{width:100%;padding:14px;border:none;border-radius:12px;background:#1abc9c;color:white;font-size:16px;cursor:pointer;font-weight:bold;margin-bottom:8px;}
+button:disabled{background:#bdc3c7;cursor:not-allowed;}
+.copy-btn{background:#3498db;display:none;}
+.result{margin-top:15px;font-size:16px;font-weight:bold;white-space:pre-line;color:#16a085;}
+.error{margin-top:10px;font-size:14px;color:#c0392b;white-space:pre-line;}
+.footer{margin-top:20px;font-size:12px;color:#888;}
 </style>
 </head>
 
 <body>
-
 <div class="card">
 <img src="https://files.catbox.moe/37ds7j.png" class="header-img">
 <div class="title">Charly MD V2</div>
 <div class="subtitle">WhatsApp Pairing Panel</div>
 <div id="status" class="status starting">● STARTING</div>
 
-<input type="text" id="phone" placeholder="260772697513" inputmode="numeric">
+<input type="text" id="phone" placeholder="260772697513" inputmode="numeric" maxlength="15">
 <button onclick="getCode()" id="btn">Get Pair Code</button>
 <button class="copy-btn" id="copyBtn" onclick="copyCode()">Copy Code</button>
 
@@ -155,93 +46,95 @@ color:#888;
 <script>
 let generatedCode = "";
 
+async function safeJson(res) {
+  const text = await res.text()
+  try { return JSON.parse(text) } 
+  catch { throw new Error(text || "Server returned invalid response") }
+}
+
 async function checkStatus(){
-try{
-const res = await fetch("/api/status")
-const data = await res.json()
-const el = document.getElementById("status")
+  try{
+    const res = await fetch("/api/status")
+    const data = await safeJson(res)
+    const el = document.getElementById("status")
 
-if(data.bot === "connected"){
-el.className = "status online"
-el.innerText = "● ONLINE"
-}else{
-el.className = "status starting"
-el.innerText = "● STARTING"
-}
-}catch{
-const el = document.getElementById("status")
-el.className = "status offline"
-el.innerText = "● OFFLINE"
-}
+    if(data.bot === "connected"){
+      el.className = "status online"
+      el.innerText = "● ONLINE"
+    }else{
+      el.className = "status starting"
+      el.innerText = "● STARTING"
+    }
+  }catch{
+    const el = document.getElementById("status")
+    el.className = "status offline"
+    el.innerText = "● OFFLINE"
+  }
 }
 
-// Auto-format phone input
 document.getElementById("phone").addEventListener("input", (e) => {
-e.target.value = e.target.value.replace(/[^0-9]/g, "")
+  e.target.value = e.target.value.replace(/[^0-9]/g, "")
 })
 
 async function getCode(){
-const phone = document.getElementById("phone").value.trim()
-const result = document.getElementById("result")
-const error = document.getElementById("error")
-const btn = document.getElementById("btn")
-const copyBtn = document.getElementById("copyBtn")
+  const phone = document.getElementById("phone").value.trim()
+  const result = document.getElementById("result")
+  const error = document.getElementById("error")
+  const btn = document.getElementById("btn")
+  const copyBtn = document.getElementById("copyBtn")
 
-result.innerText = ""
-error.innerText = ""
-copyBtn.style.display = "none"
-generatedCode = ""
+  result.innerText = ""
+  error.innerText = ""
+  copyBtn.style.display = "none"
+  generatedCode = ""
 
-if(!phone || !/^[0-9]{10,15}$/.test(phone)){
-error.innerText = "Enter valid phone number"
-return
-}
+  if(!phone || !/^[0-9]{10,15}$/.test(phone)){
+    error.innerText = "Enter valid phone number with country code"
+    return
+  }
 
-btn.disabled = true
-btn.innerText = "Generating..."
+  btn.disabled = true
+  btn.innerText = "Generating..."
 
-try{
-const res = await fetch("/api/pair-code",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({phone})
-})
+  try{
+    const res = await fetch("/api/pair-code",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({phone})
+    })
 
-const data = await res.json()
+    const data = await safeJson(res)
 
-if(!res.ok){
-throw new Error(data.error || "Failed")
-}
+    if(!res.ok || !data.success){
+      throw new Error(data.error || "Failed to generate code")
+    }
 
-generatedCode = data.code
-result.innerText = `✅ Pair Code:\n\n${data.code}\n\nWhatsApp → Linked Devices → Link with phone number`
-copyBtn.style.display = "block"
+    generatedCode = data.code
+    result.innerText = `✅ Pair Code:\n\n${data.code}\n\nWhatsApp → Linked Devices → Link with phone number`
+    copyBtn.style.display = "block"
 
-}catch(err){
-error.innerText = "❌ " + err.message
-}finally{
-btn.disabled = false
-btn.innerText = "Get Pair Code"
-}
+  }catch(err){
+    error.innerText = "❌ " + err.message
+  }finally{
+    btn.disabled = false
+    btn.innerText = "Get Pair Code"
+  }
 }
 
 async function copyCode(){
-try{
-await navigator.clipboard.writeText(generatedCode)
-const copyBtn = document.getElementById("copyBtn")
-const originalText = copyBtn.innerText
-copyBtn.innerText = "Copied!"
-setTimeout(() => {
-copyBtn.innerText = originalText
-}, 2000)
-}catch(err){
-alert("Copy failed. Select and copy manually.")
-}
+  try{
+    await navigator.clipboard.writeText(generatedCode)
+    const copyBtn = document.getElementById("copyBtn")
+    const originalText = copyBtn.innerText
+    copyBtn.innerText = "Copied!"
+    setTimeout(() => copyBtn.innerText = originalText, 2000)
+  }catch{
+    alert("Copy failed. Select and copy manually.")
+  }
 }
 
 checkStatus()
 setInterval(checkStatus, 10000)
 </script>
-
 </body>
 </html>
